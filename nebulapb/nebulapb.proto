@@ -1,0 +1,102 @@
+syntax = "proto3";
+package nebulapb;
+
+option java_package = "net.synchthia.api.nebula";
+option java_outer_classname = "NebulaProtos";
+
+message Empty {}
+
+service Nebula {
+    //-
+    // MISC
+    //-
+    rpc Ping(Empty) returns (Empty) {}
+
+    //-
+    // STREAM
+    //-
+    // API -> Bungee (Notify Server Status)
+    rpc EntryStream(StreamRequest) returns (stream EntryStreamResponse) {}
+    rpc QuitStream(QuitStreamRequest) returns (Empty) {}
+
+    //-
+    // ServerEntry
+    //-
+    // API -> Bungee (ServerEntry)
+    rpc GetServerEntry(GetServerEntryRequest) returns (GetServerEntryResponse) {}
+
+    // API <- App
+    rpc AddServerEntry(AddServerEntryRequest) returns (AddServerEntryResponse) {}
+
+    // API <- App
+    rpc RemoveServerEntry(RemoveServerEntryRequest) returns (RemoveServerEntryResponse) {}
+    
+    //-
+    // ServerStatus
+    //-
+    // Bungee -> API (Server Status)
+    rpc PushStatus(PushStatusRequest) returns (PushStatusResponse) {}
+
+    // Spigot <- API (Server Status)
+    rpc FetchStatus(FetchStatusRequest) returns (FetchStatusResponse) {}
+}
+
+//
+// STREAM
+//
+enum StreamType { QUIT = 0; CONNECT = 1; RESTORED = 2; DISPATCH = 3; SYNC = 4; }
+message StreamRequest { string name = 1; StreamType type = 2; }
+message EntryStreamResponse { StreamType type = 1; string target = 2; }
+
+message QuitStreamRequest { string name = 1; }
+
+//--
+// Server Entry
+//--
+message ServerEntry {
+    string name = 1;
+    string displayName = 2;
+    string address = 3;
+    int32 port = 4;
+    string motd = 5;
+}
+
+message ServerStatus {
+    string online = 1;
+    int32 onlinePlayers = 2;
+    int32 maxPlayers = 3;
+}
+
+//
+// ServerEntry
+//
+message GetServerEntryRequest {}
+message GetServerEntryResponse { repeated ServerEntry entry = 1; }
+
+message AddServerEntryRequest { ServerEntry entry = 1; }
+message AddServerEntryResponse {}
+
+message RemoveServerEntryRequest { string name = 1; }
+message RemoveServerEntryResponse {}
+
+//
+// ServerStatus
+//
+
+// PushStatus
+message PushStatusRequest { 
+    message StatusEntry {
+        string serverName = 1; 
+        ServerStatus status = 2;
+     }
+
+     repeated StatusEntry entry = 1;
+}
+
+message PushStatusResponse {}
+
+// FetchStatus
+message FetchStatusRequest {}
+message FetchStatusResponse { repeated ServerEntry entry = 1; }
+
+//message StatusStreamRequest { }
