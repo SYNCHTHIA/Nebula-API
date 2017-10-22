@@ -23,6 +23,7 @@ func Init() {
 			FullTimestamp:   true,
 		})
 		logrus.SetOutput(os.Stdout)
+		//logrus.SetLevel(logrus.DebugLevel)
 	}
 }
 

@@ -17,7 +17,15 @@ service Nebula {
     //-
     // API -> Bungee (Notify Server Status)
     rpc EntryStream(StreamRequest) returns (stream EntryStreamResponse) {}
-    rpc QuitStream(QuitStreamRequest) returns (Empty) {}
+    rpc QuitEntryStream(QuitEntryStreamRequest) returns (Empty) {}
+
+    // Currently Only API <-> Spigot (Server Status)
+    //rpc StatusStream(StreamRequest) returns (stream StatusStreamResponse) {}
+    //rpc QuitStatusStream(QuitStatusStreamRequest) returns (Empty) {}
+
+    // wip
+    //rpc SpigotStream(SpigotStreamRequest) returns (stream SpigotStreamResponse) {}
+    //rpc QuitSpigotStream(QuitSpigotStreamRequest) returns (Empty) {}
 
     //-
     // ServerEntry
@@ -35,20 +43,24 @@ service Nebula {
     // ServerStatus
     //-
     // Bungee -> API (Server Status)
-    rpc PushStatus(PushStatusRequest) returns (PushStatusResponse) {}
+    //rpc PushStatus(PushStatusRequest) returns (PushStatusResponse) {}
 
     // Spigot <- API (Server Status)
-    rpc FetchStatus(FetchStatusRequest) returns (FetchStatusResponse) {}
+    //rpc FetchStatus(FetchStatusRequest) returns (FetchStatusResponse) {}
 }
 
 //
-// STREAM
+// BungeeSTREAM
 //
-enum StreamType { QUIT = 0; CONNECT = 1; RESTORED = 2; DISPATCH = 3; SYNC = 4; }
-message StreamRequest { string name = 1; StreamType type = 2; }
-message EntryStreamResponse { StreamType type = 1; string target = 2; }
+//enum BungeeStreamType { QUIT = 0; CONNECT = 1; RESTORED = 2; DISPATCH = 3; SYNC = 4; }
+//message StreamRequest { string name = 1; BungeeStreamType type = 2; }
+//message EntryStreamResponse { BungeeStreamType type = 1; string target = 2; }
 
-message QuitStreamRequest { string name = 1; }
+enum StreamType { QUIT = 0; CONNECT = 1; RESTORED = 2; DISPATCH = 3; SYNC = 4; REMOVE = 5; }
+message StreamRequest { string name = 1; StreamType type = 2; }
+message EntryStreamResponse { StreamType type = 1; string target = 2; ServerEntry entry = 3; }
+
+message QuitEntryStreamRequest { string name = 1; }
 
 //--
 // Server Entry
@@ -59,12 +71,27 @@ message ServerEntry {
     string address = 3;
     int32 port = 4;
     string motd = 5;
+    ServerStatus status = 6;
 }
 
 message ServerStatus {
-    string online = 1;
-    int32 onlinePlayers = 2;
-    int32 maxPlayers = 3;
+    bool online = 1;
+    Version version = 2;
+    message Version {
+        string name = 1;
+        int32 protocol = 2;
+    }
+
+    Players players = 3;
+    message Players {
+        int32 max = 1;
+        int32 online = 2;
+        // should be have sample?
+    }
+
+    // i don't have any idea... (need map)
+    string description = 4;
+    string favicon = 5;
 }
 
 //
@@ -84,19 +111,14 @@ message RemoveServerEntryResponse {}
 //
 
 // PushStatus
-message PushStatusRequest { 
-    message StatusEntry {
-        string serverName = 1; 
-        ServerStatus status = 2;
-     }
-
-     repeated StatusEntry entry = 1;
-}
-
-message PushStatusResponse {}
+//message PushStatusRequest {
+//    string name = 1;
+//    ServerStatus status = 2;
+//}
+//message PushStatusResponse {}
 
 // FetchStatus
-message FetchStatusRequest {}
-message FetchStatusResponse { repeated ServerEntry entry = 1; }
+//message FetchStatusRequest {}
+//message FetchStatusResponse { repeated ServerEntry entry = 1; }
 
 //message StatusStreamRequest { }

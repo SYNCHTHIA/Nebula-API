@@ -1,0 +1,51 @@
+image: alpine:latest
+services:
+  - docker:dind
+
+variables:
+  GOPATH: "/go"
+  PROJECT_PATH: "/go/src/gitlab.com/Startail/Nebula-API"
+
+stages:
+  - build_app
+  - build_image
+
+build-app:
+  stage: build_app
+  artifacts:
+    paths:
+    - nebula
+
+  script:
+  - mkdir -p artifact/
+  - mkdir -p $PROJECT_PATH
+
+  # Install Apps
+  - apk --update add git wget openssl tar
+
+  # Install Golang
+  - wget https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz
+  - tar -vC /usr/local -xzf go1.8.3.linux-amd64.tar.gz
+
+  # Make Directory
+  - mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+  - export PATH=$PATH:/usr/local/go/bin
+
+  # Move to GOPATH Directory
+  - cp -Rfv $CI_PROJECT_DIR $PROJECT_PATH/..
+
+  # Build
+  - cd $PROJECT_PATH/cmd/nebula/
+  - go get -v
+  - cd $PROJECT_PATH
+  - go build -o nebula ./cmd/nebula/main.go
+
+  - cp -Rfv ./nebula $CI_PROJECT_DIR/
+
+build-image:
+  image: docker:latest
+  stage: build_image
+  script:
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+  - docker build -t registry.gitlab.com/startail/nebula-api .
+  - docker push registry.gitlab.com/startail/nebula-api
