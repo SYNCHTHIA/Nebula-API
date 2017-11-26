@@ -5,11 +5,12 @@ import (
 
 	"golang.org/x/net/context"
 
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"gitlab.com/Startail/Nebula-API/database"
 	pb "gitlab.com/Startail/Nebula-API/nebulapb"
 	"google.golang.org/grpc"
-	"time"
 )
 
 type Server interface {
@@ -155,7 +156,7 @@ func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStat
 			Online: int32(dbEntry.Players.Online),
 		},
 		Description: dbEntry.Description["text"],
-		Favicon: dbEntry.Favicon,
+		Favicon:     dbEntry.Favicon,
 	}
 }
 
@@ -166,7 +167,7 @@ func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.ServerData) *pb.ServerE
 		Address:     dbEntry.Address,
 		Port:        dbEntry.Port,
 		Motd:        dbEntry.Motd,
-		Status:		s.Status_DBtoPB(dbEntry.Status),
+		Status:      s.Status_DBtoPB(dbEntry.Status),
 	}
 }
 

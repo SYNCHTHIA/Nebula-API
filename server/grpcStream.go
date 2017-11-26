@@ -3,9 +3,10 @@ package server
 import (
 	"golang.org/x/net/context"
 
+	"strings"
+
 	"github.com/sirupsen/logrus"
 	pb "gitlab.com/Startail/Nebula-API/nebulapb"
-	"strings"
 )
 
 func (s *grpcServer) QuitEntryStream(ctx context.Context, e *pb.QuitEntryStreamRequest) (*pb.Empty, error) {
