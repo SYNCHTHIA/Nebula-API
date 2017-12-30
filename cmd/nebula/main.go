@@ -25,6 +25,15 @@ func main() {
 	// Init
 	logrus.Printf("[NEBULA] Starting Nebula Server...")
 
+	// Redis
+	go func() {
+		redisAddr := os.Getenv("REDIS_ADDRESS")
+		if len(redisAddr) == 0 {
+			redisAddr = "localhost:6379"
+		}
+		database.NewRedisSession(redisAddr)
+	}()
+
 	// MongoDB
 	mongoAddr := os.Getenv("NEBULA_MONGO_ADDRESS")
 	if len(mongoAddr) == 0 {

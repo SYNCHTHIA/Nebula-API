@@ -14,8 +14,6 @@ import (
 )
 
 type Server interface {
-	EntryDispatch()
-	Ping()
 	GetAllServerEntry()
 	AddServerEntry()
 	RemoveServerEntry()
@@ -23,15 +21,12 @@ type Server interface {
 }
 
 type grpcServer struct {
-	server           Server
-	mu               sync.RWMutex
-	entryStreamChans map[chan pb.EntryStreamResponse]struct{}
+	server Server
+	mu     sync.RWMutex
 }
 
 func NewServer() *grpcServer {
-	return &grpcServer{
-		entryStreamChans: make(map[chan pb.EntryStreamResponse]struct{}),
-	}
+	return &grpcServer{}
 }
 
 func NewGRPCServer() *grpc.Server {
@@ -54,10 +49,6 @@ func NewGRPCServer() *grpc.Server {
 		}
 	}()
 	return server
-}
-
-func (s *grpcServer) Ping(ctx context.Context, e *pb.Empty) (*pb.Empty, error) {
-	return &pb.Empty{}, nil
 }
 
 func (s *grpcServer) GetServerEntry(ctx context.Context, e *pb.GetServerEntryRequest) (*pb.GetServerEntryResponse, error) {
@@ -85,9 +76,8 @@ func (s *grpcServer) AddServerEntry(ctx context.Context, e *pb.AddServerEntryReq
 	dbEntry := s.ServerEntry_PBtoDB(e.Entry)
 	err := database.AddServerEntry(dbEntry)
 
-	for c := range s.entryStreamChans {
-		c <- pb.EntryStreamResponse{Type: pb.StreamType_SYNC, Entry: e.Entry}
-	}
+	database.PublishServer(e.Entry)
+
 	return &pb.AddServerEntryResponse{}, err
 }
 
@@ -98,51 +88,10 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 	err := database.RemoveServerEntry(e.Name)
 
 	if err == nil {
-		for c := range s.entryStreamChans {
-			// Announce only Name for Delete local entry
-			c <- pb.EntryStreamResponse{Type: pb.StreamType_REMOVE, Entry: &pb.ServerEntry{Name: e.Name}}
-		}
-
+		database.PublishRemoveServer(&pb.ServerEntry{Name: e.Name})
 	}
 	return &pb.RemoveServerEntryResponse{}, err
 }
-
-/*
-func (s *grpcServer) PushStatus(ctx context.Context, e *pb.PushStatusRequest) (*pb.PushStatusResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	//todo: get is updated
-	updated, err := database.PushServerStatus(e.Name, e.Status)
-	if updated > 0 {
-		//todo: if updated, send to spigot?
-		// -> get server entry from name
-		logrus.Printf("[PushStatus] Changed Something!")
-	}
-
-	return &pb.PushStatusResponse{}, err
-} */
-
-/*func (s *grpcServer) FetchStatus(ctx context.Context, e *pb.FetchStatusRequest) (*pb.FetchStatusResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	logrus.Printf("Incoming Request")
-
-	var rpcServerEntry []*pb.ServerEntry
-
-	db, err := database.GetAllServerEntry()
-	if err != nil {
-		logrus.WithError(err).Errorf("[gRPC] Error @ FetchStatus: %s", err)
-		return nil, err
-	}
-	for _, ent := range db {
-		logrus.Printf("[***] %s", ent.Name)
-		pbEntry := s.ServerEntry_DBtoPB(ent)
-		rpcServerEntry = append(rpcServerEntry, pbEntry)
-	}
-	return &pb.FetchStatusResponse{Entry: rpcServerEntry}, nil
-}*/
 
 func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStatus {
 	return &pb.ServerStatus{

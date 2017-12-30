@@ -1,12 +1,11 @@
 package server
 
 import (
-	"github.com/sirupsen/logrus"
 	"fmt"
+
+	"github.com/sirupsen/logrus"
 	"gitlab.com/Startail/Nebula-API/database"
 	"gitlab.com/Startail/Nebula-API/util"
-
-	pb "gitlab.com/Startail/Nebula-API/nebulapb"
 )
 
 func (s *grpcServer) pinging() {
@@ -34,10 +33,7 @@ func (s *grpcServer) pinging() {
 				}
 
 				if updated > 0 {
-					for c := range s.entryStreamChans {
-						// Announce only Name for Delete local entry
-						c <- pb.EntryStreamResponse{Type: pb.StreamType_SYNC, Entry: s.ServerEntry_DBtoPB(data)}
-					}
+					database.PublishServer(s.ServerEntry_DBtoPB(data))
 				}
 			}(v)
 		}

@@ -4,32 +4,7 @@ package nebulapb;
 option java_package = "net.synchthia.api.nebula";
 option java_outer_classname = "NebulaProtos";
 
-message Empty {}
-
 service Nebula {
-    //-
-    // MISC
-    //-
-    rpc Ping(Empty) returns (Empty) {}
-
-    //-
-    // STREAM
-    //-
-    // API -> Bungee (Notify Server Status)
-    rpc EntryStream(StreamRequest) returns (stream EntryStreamResponse) {}
-    rpc QuitEntryStream(QuitEntryStreamRequest) returns (Empty) {}
-
-    // Currently Only API <-> Spigot (Server Status)
-    //rpc StatusStream(StreamRequest) returns (stream StatusStreamResponse) {}
-    //rpc QuitStatusStream(QuitStatusStreamRequest) returns (Empty) {}
-
-    // wip
-    //rpc SpigotStream(SpigotStreamRequest) returns (stream SpigotStreamResponse) {}
-    //rpc QuitSpigotStream(QuitSpigotStreamRequest) returns (Empty) {}
-
-    //-
-    // ServerEntry
-    //-
     // API -> Bungee (ServerEntry)
     rpc GetServerEntry(GetServerEntryRequest) returns (GetServerEntryResponse) {}
 
@@ -38,33 +13,22 @@ service Nebula {
 
     // API <- App
     rpc RemoveServerEntry(RemoveServerEntryRequest) returns (RemoveServerEntryResponse) {}
-    
-    //-
-    // ServerStatus
-    //-
-    // Bungee -> API (Server Status)
-    //rpc PushStatus(PushStatusRequest) returns (PushStatusResponse) {}
-
-    // Spigot <- API (Server Status)
-    //rpc FetchStatus(FetchStatusRequest) returns (FetchStatusResponse) {}
 }
-
-//
-// BungeeSTREAM
-//
-//enum BungeeStreamType { QUIT = 0; CONNECT = 1; RESTORED = 2; DISPATCH = 3; SYNC = 4; }
-//message StreamRequest { string name = 1; BungeeStreamType type = 2; }
-//message EntryStreamResponse { BungeeStreamType type = 1; string target = 2; }
-
-enum StreamType { QUIT = 0; CONNECT = 1; RESTORED = 2; DISPATCH = 3; SYNC = 4; REMOVE = 5; }
-message StreamRequest { string name = 1; StreamType type = 2; }
-message EntryStreamResponse { StreamType type = 1; string target = 2; ServerEntry entry = 3; }
-
-message QuitEntryStreamRequest { string name = 1; }
 
 //--
 // Server Entry
 //--
+
+// ServerEntryStream (type: sync, remove)
+message ServerEntryStream{
+    enum Type {
+        SYNC = 0;
+        REMOVE = 1;
+    }
+    Type type = 1;
+    ServerEntry entry = 2; 
+}
+
 message ServerEntry {
     string name = 1;
     string displayName = 2;
@@ -105,20 +69,3 @@ message AddServerEntryResponse {}
 
 message RemoveServerEntryRequest { string name = 1; }
 message RemoveServerEntryResponse {}
-
-//
-// ServerStatus
-//
-
-// PushStatus
-//message PushStatusRequest {
-//    string name = 1;
-//    ServerStatus status = 2;
-//}
-//message PushStatusResponse {}
-
-// FetchStatus
-//message FetchStatusRequest {}
-//message FetchStatusResponse { repeated ServerEntry entry = 1; }
-
-//message StatusStreamRequest { }

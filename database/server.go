@@ -20,11 +20,11 @@ type ServerData struct {
 }
 
 type PingResponse struct {
-	Online	bool
-	Version     VersionData `json:"version"`
-	Players     PlayersData `json:"players"`
+	Online      bool
+	Version     VersionData       `json:"version"`
+	Players     PlayersData       `json:"players"`
 	Description map[string]string `json:"description"`
-	Favicon     string      `json:"favicon"`
+	Favicon     string            `json:"favicon"`
 }
 
 type VersionData struct {
@@ -33,8 +33,8 @@ type VersionData struct {
 }
 
 type PlayersData struct {
-	Max    int
-	Online int
+	Max    int32
+	Online int32
 }
 
 // StatusData - Server Status
@@ -131,31 +131,8 @@ func PushServerStatus(name string, response PingResponse) (string, int, error) {
 	}
 
 	if updated > 0 {
-		logrus.Printf("[Fetcher] Should be Send info : %s [%d]", name, updated)
+		logrus.Debugf("[Fetcher] Updated : %s [%d]", name, updated)
 	}
 
 	return name, updated, err
 }
-
-/*func PushServerStatus(name string, status *nebulapb.ServerStatus) (int, error) {
-	session := session.Copy()
-	defer session.Close()
-	coll := session.DB("nebula").C("servers")
-
-	query := bson.M{"$set": bson.M{"status": &StatusData{
-		ServerStatus:  status.Online,
-		OnlinePlayers: status.OnlinePlayers,
-		MaxPlayers:    status.MaxPlayers,
-	}}}
-
-	updated := 0
-	info, err := coll.Upsert(bson.M{"name": name}, query)
-	if err == nil {
-		updated = info.Updated
-	}
-
-	//logrus.Printf("[Push] %s updated: %d", name, updated)
-
-	return updated, err
-}
-*/
