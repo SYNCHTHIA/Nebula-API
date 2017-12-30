@@ -31,7 +31,7 @@ func main() {
 		if len(redisAddr) == 0 {
 			redisAddr = "localhost:6379"
 		}
-		database.NewRedisSession(redisAddr)
+		database.NewRedisPool(redisAddr)
 	}()
 
 	// MongoDB

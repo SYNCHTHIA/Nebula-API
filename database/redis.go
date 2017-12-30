@@ -2,8 +2,6 @@ package database
 
 import (
 	"encoding/json"
-	"flag"
-	"strings"
 	"time"
 
 	"gitlab.com/Startail/Nebula-API/nebulapb"
@@ -12,49 +10,47 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var redisConn redis.Conn
+var pool *redis.Pool
+var conn redis.Conn
 
-// NewRedisSession - Connect to Redis
-func NewRedisSession(address string) {
-	// Set Flag
-	pAddress := strings.Split(address, ":")
-	host := flag.String("hostname", pAddress[0], "Set Hostname")
-	port := flag.String("port", pAddress[1], "Set Port")
-	flag.Parse()
+// NewRedisPool - redis Connection Pooling
+func NewRedisPool(server string) {
+	logrus.WithFields(logrus.Fields{
+		"server": server,
+	}).Infof("[Redis] Creating Pool...")
 
-	for {
-		logrus.WithFields(logrus.Fields{
-			"servers": address,
-		}).Infof("[Redis] Connecting...")
+	pool = &redis.Pool{
+		MaxIdle:   12,
+		MaxActive: 0,
+		//IdleTimeout: 240 * time.Second,
+		Wait: true,
 
-		// Connecting
-		c, err := redis.Dial("tcp", *host+":"+*port)
-		if err != nil {
-			logrus.WithError(err).Errorf("[Redis] Error occurred while connecting to %s", address)
-			time.Sleep(5 * time.Second)
-			continue
-		}
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", server)
 
-		redisConn = c
-		logrus.Printf("[Redis] Connected!")
-		for {
-			if c.Err() != nil {
-				logrus.WithError(err).Errorf("[Redis] Error occurred in Connected Session: %s", address)
-				c.Close()
-				time.Sleep(5 * time.Second)
-				break
+			if err != nil {
+				logrus.WithError(err).Errorf("[Redis] Error occurred in Connecting: %s", server)
+				return nil, err
 			}
-		}
-	}
-}
 
-// DisconnectRedis - Disconnect from Redis
-func DisconnectRedis() {
-	redisConn.Close()
+			return c, err
+		},
+
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			_, err := c.Do("PING")
+			if err != nil {
+				logrus.WithError(err).Errorf("[Redis] Error occurred in Redis Pool: %s", server)
+			}
+			return err
+		},
+	}
 }
 
 // PublishServer - Publish with Redis
 func PublishServer(data *nebulapb.ServerEntry) {
+	c := pool.Get()
+	defer c.Close()
+
 	d := &nebulapb.ServerEntryStream{
 		Type:  nebulapb.ServerEntryStream_SYNC,
 		Entry: data,
@@ -62,7 +58,7 @@ func PublishServer(data *nebulapb.ServerEntry) {
 	serialized, _ := json.Marshal(&d)
 	logrus.Debugln(d)
 
-	_, err := redisConn.Do("PUBLISH", "nebula.servers.global", string(serialized))
+	_, err := c.Do("PUBLISH", "nebula.servers.global", string(serialized))
 	if err != nil {
 		logrus.WithError(err).Errorf("[Publish] Failed Publish Server")
 	}
@@ -70,13 +66,16 @@ func PublishServer(data *nebulapb.ServerEntry) {
 
 // PublishRemoveServer - Remove Server send Redis
 func PublishRemoveServer(data *nebulapb.ServerEntry) {
+	c := pool.Get()
+	defer c.Close()
+
 	d := &nebulapb.ServerEntryStream{
 		Type:  nebulapb.ServerEntryStream_REMOVE,
 		Entry: data,
 	}
 	serialized, _ := json.Marshal(&d)
 	logrus.Debugln(data)
-	_, err := redisConn.Do("PUBLISH", "nebula.servers.global", string(serialized))
+	_, err := c.Do("PUBLISH", "nebula.servers.global", string(serialized))
 	if err != nil {
 		logrus.WithError(err).Errorf("[Publish] Failed Remove Server")
 	}
