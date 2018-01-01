@@ -11,7 +11,6 @@ import (
 )
 
 var pool *redis.Pool
-var conn redis.Conn
 
 // NewRedisPool - redis Connection Pooling
 func NewRedisPool(server string) {
