@@ -116,6 +116,7 @@ func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.ServerData) *pb.ServerE
 		Address:     dbEntry.Address,
 		Port:        dbEntry.Port,
 		Motd:        dbEntry.Motd,
+		Fallback:    dbEntry.Fallback,
 		Status:      s.Status_DBtoPB(dbEntry.Status),
 	}
 }
@@ -127,5 +128,6 @@ func (s *grpcServer) ServerEntry_PBtoDB(pbEntry *pb.ServerEntry) database.Server
 		Address:     pbEntry.Address,
 		Port:        pbEntry.Port,
 		Motd:        pbEntry.Motd,
+		Fallback:    pbEntry.Fallback,
 	}
 }

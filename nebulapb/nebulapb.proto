@@ -35,7 +35,8 @@ message ServerEntry {
     string address = 3;
     int32 port = 4;
     string motd = 5;
-    ServerStatus status = 6;
+    bool fallback = 6;
+    ServerStatus status = 7;
 }
 
 message ServerStatus {

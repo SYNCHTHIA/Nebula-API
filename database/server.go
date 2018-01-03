@@ -15,6 +15,7 @@ type ServerData struct {
 	Address     string        `json:"address" bson:"address"`
 	Port        int32         `json:"port" bson:"port"`
 	Motd        string        `json:"motd" bson:"motd"`
+	Fallback    bool          `bson:"fallback"`
 	Status      PingResponse  `bson:"status"`
 	//Status      StatusData    `json:"status" bson:"status"`
 }
