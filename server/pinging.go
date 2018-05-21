@@ -26,15 +26,13 @@ func (s *grpcServer) pinging() {
 					logrus.Debugf("%s is offline", data.Name)
 					data.Status = database.PingResponse{}
 				}
-				_, updated, pushErr := database.PushServerStatus(data.Name, data.Status)
+				_, _, pushErr := database.PushServerStatus(data.Name, data.Status)
 				//s.mu.Unlock()
 				if pushErr != nil {
 					return
 				}
 
-				if updated > 0 {
-					database.PublishServer(s.ServerEntry_DBtoPB(data))
-				}
+				database.PublishServer(s.ServerEntry_DBtoPB(data))
 			}(v)
 		}
 	}
