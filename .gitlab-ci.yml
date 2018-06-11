@@ -45,6 +45,7 @@ build-java:
   - echo -e ${CI_MVN_SETTINGS} > $HOME/.m2/settings.xml
   - mkdir -p ./java/src/main/proto/ && cp -Rfv ./*.proto ./java/src/main/proto/
   - cd java
+  - mvn clean deploy
 
 build-image:
   image: docker:latest
