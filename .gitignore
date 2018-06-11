@@ -1,6 +1,10 @@
 ## Proto
 nebulapb/copyjava.bat
 nebulapb/net
+nebulapb/java/target
+nebulapb/java/src/main/proto/
+*.iml
+dependency-reduced-pom.xml
 
 ## Custom ignores
 *.log
