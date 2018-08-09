@@ -13,6 +13,15 @@ service Nebula {
 
     // API <- App
     rpc RemoveServerEntry(RemoveServerEntryRequest) returns (RemoveServerEntryResponse) {}
+
+    // API -> Bungee (BungeeEntry)
+    rpc GetBungeeEntry(GetBungeeEntryRequest) returns (GetBungeeEntryResponse) {}
+
+    // API <- App
+    rpc SetMotd(SetMotdRequest) returns (SetMotdResponse) {}
+
+    // API <- App
+    rpc SetFavicon(SetFaviconRequest) returns (SetFaviconResponse) {}
 }
 
 //--
@@ -20,7 +29,7 @@ service Nebula {
 //--
 
 // ServerEntryStream (type: sync, remove)
-message ServerEntryStream{
+message ServerEntryStream {
     enum Type {
         SYNC = 0;
         REMOVE = 1;
@@ -70,3 +79,30 @@ message AddServerEntryResponse {}
 
 message RemoveServerEntryRequest { string name = 1; }
 message RemoveServerEntryResponse {}
+
+//--
+// Bungee Entry
+//--
+message BungeeEntryStream {
+    enum Type {
+        SYNC = 0;
+    }
+    Type type = 1;
+    BungeeEntry entry = 2;
+}
+
+message BungeeEntry {
+    string motd = 1;
+    string favicon = 2;
+}
+
+message GetBungeeEntryRequest {}
+message GetBungeeEntryResponse {
+    BungeeEntry entry = 1;
+}
+
+message SetMotdRequest { string motd = 1; }
+message SetMotdResponse {}
+
+message SetFaviconRequest { string favicon = 1; }
+message SetFaviconResponse {}

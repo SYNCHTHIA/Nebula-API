@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gitlab.com/Startail/Nebula-API/database"
 	pb "gitlab.com/Startail/Nebula-API/nebulapb"
+	"gitlab.com/Startail/Nebula-API/stream"
 	"google.golang.org/grpc"
 )
 
@@ -17,6 +18,7 @@ type Server interface {
 	GetAllServerEntry()
 	AddServerEntry()
 	RemoveServerEntry()
+	GetBungeeEntry()
 	//FetchStatus()
 }
 
@@ -76,7 +78,7 @@ func (s *grpcServer) AddServerEntry(ctx context.Context, e *pb.AddServerEntryReq
 	dbEntry := s.ServerEntry_PBtoDB(e.Entry)
 	err := database.AddServerEntry(dbEntry)
 
-	database.PublishServer(e.Entry)
+	stream.PublishServer(e.Entry)
 
 	return &pb.AddServerEntryResponse{}, err
 }
@@ -88,9 +90,42 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 	err := database.RemoveServerEntry(e.Name)
 
 	if err == nil {
-		database.PublishRemoveServer(&pb.ServerEntry{Name: e.Name})
+		stream.PublishRemoveServer(&pb.ServerEntry{Name: e.Name})
 	}
 	return &pb.RemoveServerEntryResponse{}, err
+}
+
+func (s *grpcServer) GetBungeeEntry(ctx context.Context, e *pb.GetBungeeEntryRequest) (*pb.GetBungeeEntryResponse, error) {
+	entry, err := database.GetBungeeEntry()
+	return &pb.GetBungeeEntryResponse{Entry: s.BungeeEntry_DBtoPB(entry)}, err
+}
+
+func (s *grpcServer) SetMotd(ctx context.Context, e *pb.SetMotdRequest) (*pb.SetMotdResponse, error) {
+	err := database.SetMotd(e.Motd)
+	entry, err := database.GetBungeeEntry()
+	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
+	return &pb.SetMotdResponse{}, err
+}
+
+func (s *grpcServer) SetFavicon(ctx context.Context, e *pb.SetFaviconRequest) (*pb.SetFaviconResponse, error) {
+	err := database.SetFavicon(e.Favicon)
+	entry, err := database.GetBungeeEntry()
+	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
+	return &pb.SetFaviconResponse{}, err
+}
+
+func (s *grpcServer) BungeeEntry_DBtoPB(dbEntry database.BungeeData) *pb.BungeeEntry {
+	return &pb.BungeeEntry{
+		Motd:    dbEntry.Motd,
+		Favicon: dbEntry.Favicon,
+	}
+}
+
+func (s *grpcServer) BungeeEntry_PBtoDB(pbEntry *pb.BungeeEntry) database.BungeeData {
+	return database.BungeeData{
+		Motd:    pbEntry.Motd,
+		Favicon: pbEntry.Favicon,
+	}
 }
 
 func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStatus {

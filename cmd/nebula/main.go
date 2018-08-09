@@ -8,6 +8,7 @@ import (
 	"gitlab.com/Startail/Nebula-API/database"
 	"gitlab.com/Startail/Nebula-API/logger"
 	"gitlab.com/Startail/Nebula-API/server"
+	"gitlab.com/Startail/Nebula-API/stream"
 )
 
 func startGRPC(port string) error {
@@ -31,7 +32,7 @@ func main() {
 		if len(redisAddr) == 0 {
 			redisAddr = "localhost:6379"
 		}
-		database.NewRedisPool(redisAddr)
+		stream.NewRedisPool(redisAddr)
 	}()
 
 	// MongoDB

@@ -5,6 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"gitlab.com/Startail/Nebula-API/database"
+	"gitlab.com/Startail/Nebula-API/stream"
 	"gitlab.com/Startail/Nebula-API/util"
 )
 
@@ -31,8 +32,7 @@ func (s *grpcServer) pinging() {
 				if pushErr != nil {
 					return
 				}
-
-				database.PublishServer(s.ServerEntry_DBtoPB(data))
+				stream.PublishServer(s.ServerEntry_DBtoPB(data))
 			}(v)
 		}
 	}
