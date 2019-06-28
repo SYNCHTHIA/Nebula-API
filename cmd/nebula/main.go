@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"gitlab.com/Startail/Nebula-API/database"
-	"gitlab.com/Startail/Nebula-API/logger"
-	"gitlab.com/Startail/Nebula-API/server"
-	"gitlab.com/Startail/Nebula-API/stream"
+	"github.com/synchthia/nebula-api/database"
+	"github.com/synchthia/nebula-api/logger"
+	"github.com/synchthia/nebula-api/server"
+	"github.com/synchthia/nebula-api/stream"
 )
 
 func startGRPC(port string) error {

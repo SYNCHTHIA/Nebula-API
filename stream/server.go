@@ -3,7 +3,7 @@ package stream
 import (
 	"encoding/json"
 
-	"gitlab.com/Startail/Nebula-API/nebulapb"
+	"github.com/synchthia/nebula-api/nebulapb"
 
 	"github.com/sirupsen/logrus"
 )

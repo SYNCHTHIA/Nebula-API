@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.com/Startail/Nebula-API/database"
+	"github.com/synchthia/nebula-api/database"
 )
 
 const (

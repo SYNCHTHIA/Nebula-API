@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"gitlab.com/Startail/Nebula-API/database"
-	"gitlab.com/Startail/Nebula-API/stream"
-	"gitlab.com/Startail/Nebula-API/util"
+	"github.com/synchthia/nebula-api/database"
+	"github.com/synchthia/nebula-api/stream"
+	"github.com/synchthia/nebula-api/util"
 )
 
 func (s *grpcServer) pinging() {

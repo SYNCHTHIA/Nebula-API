@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"gitlab.com/Startail/Nebula-API/database"
-	pb "gitlab.com/Startail/Nebula-API/nebulapb"
-	"gitlab.com/Startail/Nebula-API/stream"
+	"github.com/synchthia/nebula-api/database"
+	pb "github.com/synchthia/nebula-api/nebulapb"
+	"github.com/synchthia/nebula-api/stream"
 	"google.golang.org/grpc"
 )
 
