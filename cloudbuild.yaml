@@ -1,0 +1,28 @@
+substitutions:
+  _KEY_NAME: "nebula-api-env"
+
+steps:
+  - id: 'extract-env'
+    name: 'gcr.io/cloud-builders/gcloud'
+    args: ['kms', 'decrypt', '--plaintext-file=.env', '--ciphertext-file=.env.enc', '--location=global', '--keyring=cloudbuild-secret', '--key=$_KEY_NAME']
+
+  - id: 'docker:build_and_push'
+    waitFor: ['extract-env']
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - docker build . -t gcr.io/startail-io/nebula-api &&
+        docker push gcr.io/startail-io/nebula-api
+
+  - id: 'maven:deploy'
+    waitFor: ['extract-env']
+    name: 'maven:3.6.0-jdk-8-slim'
+    entrypoint: /bin/bash
+    args:
+      - -c
+      - |
+        set -e
+        mkdir -p $$MAVEN_CONFIG
+        source .env && echo -n "$${CI_MVN_SETTINGS}" > $$MAVEN_CONFIG/settings.xml
+        bash ./nebulapb/make-java.sh deploy
