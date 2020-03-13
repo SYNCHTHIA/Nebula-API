@@ -22,6 +22,9 @@ service Nebula {
 
     // API <- App
     rpc SetFavicon(SetFaviconRequest) returns (SetFaviconResponse) {}
+
+    // API <- App
+    rpc SetLockdown(SetLockdownRequest) returns (SetLockdownResponse) {}
 }
 
 //--
@@ -35,7 +38,7 @@ message ServerEntryStream {
         REMOVE = 1;
     }
     Type type = 1;
-    ServerEntry entry = 2; 
+    ServerEntry entry = 2;
 }
 
 message ServerEntry {
@@ -45,7 +48,13 @@ message ServerEntry {
     int32 port = 4;
     string motd = 5;
     bool fallback = 6;
-    ServerStatus status = 7;
+    Lockdown lockdown = 7;
+    ServerStatus status = 8;
+}
+
+message Lockdown {
+    bool enabled = 1;
+    string description = 2;
 }
 
 message ServerStatus {
@@ -106,3 +115,10 @@ message SetMotdResponse {}
 
 message SetFaviconRequest { string favicon = 1; }
 message SetFaviconResponse {}
+
+message SetLockdownRequest {
+    string name = 1;
+    Lockdown lockdown = 2;
+}
+
+message SetLockdownResponse {}
