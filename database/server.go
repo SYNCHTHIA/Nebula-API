@@ -5,6 +5,7 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/sirupsen/logrus"
+	"github.com/synchthia/nebula-api/nebulapb"
 )
 
 // ServerData - Server List Data
@@ -16,8 +17,35 @@ type ServerData struct {
 	Port        int32         `json:"port" bson:"port"`
 	Motd        string        `json:"motd" bson:"motd"`
 	Fallback    bool          `bson:"fallback"`
+	Lockdown    Lockdown      `bson:"lockdown"`
 	Status      PingResponse  `bson:"status"`
 	//Status      StatusData    `json:"status" bson:"status"`
+}
+
+// Lockdown - Server lockdown entry
+type Lockdown struct {
+	Enabled     bool   `bson:"enabled"`
+	Description string `bson:"description,omitempty"`
+}
+
+func LockdownFromProtobuf(pb *nebulapb.Lockdown) Lockdown {
+	if pb == nil {
+		return Lockdown{
+			Enabled: false,
+		}
+	}
+
+	return Lockdown{
+		Enabled:     pb.Enabled,
+		Description: pb.Description,
+	}
+}
+
+func (l *Lockdown) ToProtobuf() *nebulapb.Lockdown {
+	return &nebulapb.Lockdown{
+		Enabled:     l.Enabled,
+		Description: l.Description,
+	}
 }
 
 type PingResponse struct {
@@ -136,4 +164,23 @@ func PushServerStatus(name string, response PingResponse) (string, int, error) {
 	}
 
 	return name, updated, err
+}
+
+// SetLockdown - Set server Lockdown
+func SetLockdown(name string, enabled bool, description string) error {
+	session := session.Copy()
+	defer session.Close()
+	coll := session.DB("nebula").C("servers")
+
+	if v, err := coll.Find(bson.M{"name": name}).Count(); v == 0 || err != nil {
+		return err
+	}
+
+	lockdown := &Lockdown{
+		Enabled:     enabled,
+		Description: description,
+	}
+
+	_, err := coll.Upsert(bson.M{"name": name}, bson.M{"$set": bson.M{"lockdown": lockdown}})
+	return err
 }

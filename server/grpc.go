@@ -19,6 +19,7 @@ type Server interface {
 	AddServerEntry()
 	RemoveServerEntry()
 	GetBungeeEntry()
+	SetLockdown()
 	//FetchStatus()
 }
 
@@ -114,6 +115,23 @@ func (s *grpcServer) SetFavicon(ctx context.Context, e *pb.SetFaviconRequest) (*
 	return &pb.SetFaviconResponse{}, err
 }
 
+func (s *grpcServer) SetLockdown(ctx context.Context, e *pb.SetLockdownRequest) (*pb.SetLockdownResponse, error) {
+	if e.Lockdown.Enabled && e.Lockdown.Description == "" {
+		e.Lockdown.Description = "&cThis server currently not available"
+	}
+
+	if err := database.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
+		return &pb.SetLockdownResponse{}, err
+	}
+
+	entry, err := database.GetServerEntry(e.Name)
+	if err == nil {
+		stream.PublishServer(s.ServerEntry_DBtoPB(entry))
+	}
+
+	return &pb.SetLockdownResponse{Entry: s.ServerEntry_DBtoPB(entry)}, err
+}
+
 func (s *grpcServer) BungeeEntry_DBtoPB(dbEntry database.BungeeData) *pb.BungeeEntry {
 	return &pb.BungeeEntry{
 		Motd:    dbEntry.Motd,
@@ -152,6 +170,7 @@ func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.ServerData) *pb.ServerE
 		Port:        dbEntry.Port,
 		Motd:        dbEntry.Motd,
 		Fallback:    dbEntry.Fallback,
+		Lockdown:    dbEntry.Lockdown.ToProtobuf(),
 		Status:      s.Status_DBtoPB(dbEntry.Status),
 	}
 }
@@ -164,5 +183,6 @@ func (s *grpcServer) ServerEntry_PBtoDB(pbEntry *pb.ServerEntry) database.Server
 		Port:        pbEntry.Port,
 		Motd:        pbEntry.Motd,
 		Fallback:    pbEntry.Fallback,
+		Lockdown:    database.LockdownFromProtobuf(pbEntry.Lockdown),
 	}
 }

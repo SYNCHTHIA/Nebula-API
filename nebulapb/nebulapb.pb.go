@@ -3,13 +3,14 @@
 
 package nebulapb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-
 import (
-	context "golang.org/x/net/context"
+	context "context"
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -21,7 +22,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type ServerEntryStream_Type int32
 
@@ -34,6 +35,7 @@ var ServerEntryStream_Type_name = map[int32]string{
 	0: "SYNC",
 	1: "REMOVE",
 }
+
 var ServerEntryStream_Type_value = map[string]int32{
 	"SYNC":   0,
 	"REMOVE": 1,
@@ -42,8 +44,9 @@ var ServerEntryStream_Type_value = map[string]int32{
 func (x ServerEntryStream_Type) String() string {
 	return proto.EnumName(ServerEntryStream_Type_name, int32(x))
 }
+
 func (ServerEntryStream_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{0, 0}
+	return fileDescriptor_d182df6f9a02c67f, []int{0, 0}
 }
 
 type BungeeEntryStream_Type int32
@@ -55,6 +58,7 @@ const (
 var BungeeEntryStream_Type_name = map[int32]string{
 	0: "SYNC",
 }
+
 var BungeeEntryStream_Type_value = map[string]int32{
 	"SYNC": 0,
 }
@@ -62,8 +66,9 @@ var BungeeEntryStream_Type_value = map[string]int32{
 func (x BungeeEntryStream_Type) String() string {
 	return proto.EnumName(BungeeEntryStream_Type_name, int32(x))
 }
+
 func (BungeeEntryStream_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{9, 0}
+	return fileDescriptor_d182df6f9a02c67f, []int{10, 0}
 }
 
 // ServerEntryStream (type: sync, remove)
@@ -79,16 +84,17 @@ func (m *ServerEntryStream) Reset()         { *m = ServerEntryStream{} }
 func (m *ServerEntryStream) String() string { return proto.CompactTextString(m) }
 func (*ServerEntryStream) ProtoMessage()    {}
 func (*ServerEntryStream) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{0}
+	return fileDescriptor_d182df6f9a02c67f, []int{0}
 }
+
 func (m *ServerEntryStream) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ServerEntryStream.Unmarshal(m, b)
 }
 func (m *ServerEntryStream) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ServerEntryStream.Marshal(b, m, deterministic)
 }
-func (dst *ServerEntryStream) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ServerEntryStream.Merge(dst, src)
+func (m *ServerEntryStream) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ServerEntryStream.Merge(m, src)
 }
 func (m *ServerEntryStream) XXX_Size() int {
 	return xxx_messageInfo_ServerEntryStream.Size(m)
@@ -120,7 +126,8 @@ type ServerEntry struct {
 	Port                 int32         `protobuf:"varint,4,opt,name=port,proto3" json:"port,omitempty"`
 	Motd                 string        `protobuf:"bytes,5,opt,name=motd,proto3" json:"motd,omitempty"`
 	Fallback             bool          `protobuf:"varint,6,opt,name=fallback,proto3" json:"fallback,omitempty"`
-	Status               *ServerStatus `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"`
+	Lockdown             *Lockdown     `protobuf:"bytes,7,opt,name=lockdown,proto3" json:"lockdown,omitempty"`
+	Status               *ServerStatus `protobuf:"bytes,8,opt,name=status,proto3" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
@@ -130,16 +137,17 @@ func (m *ServerEntry) Reset()         { *m = ServerEntry{} }
 func (m *ServerEntry) String() string { return proto.CompactTextString(m) }
 func (*ServerEntry) ProtoMessage()    {}
 func (*ServerEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{1}
+	return fileDescriptor_d182df6f9a02c67f, []int{1}
 }
+
 func (m *ServerEntry) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ServerEntry.Unmarshal(m, b)
 }
 func (m *ServerEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ServerEntry.Marshal(b, m, deterministic)
 }
-func (dst *ServerEntry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ServerEntry.Merge(dst, src)
+func (m *ServerEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ServerEntry.Merge(m, src)
 }
 func (m *ServerEntry) XXX_Size() int {
 	return xxx_messageInfo_ServerEntry.Size(m)
@@ -192,11 +200,65 @@ func (m *ServerEntry) GetFallback() bool {
 	return false
 }
 
+func (m *ServerEntry) GetLockdown() *Lockdown {
+	if m != nil {
+		return m.Lockdown
+	}
+	return nil
+}
+
 func (m *ServerEntry) GetStatus() *ServerStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
+}
+
+type Lockdown struct {
+	Enabled              bool     `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Description          string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Lockdown) Reset()         { *m = Lockdown{} }
+func (m *Lockdown) String() string { return proto.CompactTextString(m) }
+func (*Lockdown) ProtoMessage()    {}
+func (*Lockdown) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d182df6f9a02c67f, []int{2}
+}
+
+func (m *Lockdown) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Lockdown.Unmarshal(m, b)
+}
+func (m *Lockdown) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Lockdown.Marshal(b, m, deterministic)
+}
+func (m *Lockdown) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Lockdown.Merge(m, src)
+}
+func (m *Lockdown) XXX_Size() int {
+	return xxx_messageInfo_Lockdown.Size(m)
+}
+func (m *Lockdown) XXX_DiscardUnknown() {
+	xxx_messageInfo_Lockdown.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Lockdown proto.InternalMessageInfo
+
+func (m *Lockdown) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
+func (m *Lockdown) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
 }
 
 type ServerStatus struct {
@@ -215,16 +277,17 @@ func (m *ServerStatus) Reset()         { *m = ServerStatus{} }
 func (m *ServerStatus) String() string { return proto.CompactTextString(m) }
 func (*ServerStatus) ProtoMessage()    {}
 func (*ServerStatus) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{2}
+	return fileDescriptor_d182df6f9a02c67f, []int{3}
 }
+
 func (m *ServerStatus) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ServerStatus.Unmarshal(m, b)
 }
 func (m *ServerStatus) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ServerStatus.Marshal(b, m, deterministic)
 }
-func (dst *ServerStatus) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ServerStatus.Merge(dst, src)
+func (m *ServerStatus) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ServerStatus.Merge(m, src)
 }
 func (m *ServerStatus) XXX_Size() int {
 	return xxx_messageInfo_ServerStatus.Size(m)
@@ -282,16 +345,17 @@ func (m *ServerStatus_Version) Reset()         { *m = ServerStatus_Version{} }
 func (m *ServerStatus_Version) String() string { return proto.CompactTextString(m) }
 func (*ServerStatus_Version) ProtoMessage()    {}
 func (*ServerStatus_Version) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{2, 0}
+	return fileDescriptor_d182df6f9a02c67f, []int{3, 0}
 }
+
 func (m *ServerStatus_Version) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ServerStatus_Version.Unmarshal(m, b)
 }
 func (m *ServerStatus_Version) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ServerStatus_Version.Marshal(b, m, deterministic)
 }
-func (dst *ServerStatus_Version) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ServerStatus_Version.Merge(dst, src)
+func (m *ServerStatus_Version) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ServerStatus_Version.Merge(m, src)
 }
 func (m *ServerStatus_Version) XXX_Size() int {
 	return xxx_messageInfo_ServerStatus_Version.Size(m)
@@ -328,16 +392,17 @@ func (m *ServerStatus_Players) Reset()         { *m = ServerStatus_Players{} }
 func (m *ServerStatus_Players) String() string { return proto.CompactTextString(m) }
 func (*ServerStatus_Players) ProtoMessage()    {}
 func (*ServerStatus_Players) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{2, 1}
+	return fileDescriptor_d182df6f9a02c67f, []int{3, 1}
 }
+
 func (m *ServerStatus_Players) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ServerStatus_Players.Unmarshal(m, b)
 }
 func (m *ServerStatus_Players) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ServerStatus_Players.Marshal(b, m, deterministic)
 }
-func (dst *ServerStatus_Players) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ServerStatus_Players.Merge(dst, src)
+func (m *ServerStatus_Players) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ServerStatus_Players.Merge(m, src)
 }
 func (m *ServerStatus_Players) XXX_Size() int {
 	return xxx_messageInfo_ServerStatus_Players.Size(m)
@@ -375,16 +440,17 @@ func (m *GetServerEntryRequest) Reset()         { *m = GetServerEntryRequest{} }
 func (m *GetServerEntryRequest) String() string { return proto.CompactTextString(m) }
 func (*GetServerEntryRequest) ProtoMessage()    {}
 func (*GetServerEntryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{3}
+	return fileDescriptor_d182df6f9a02c67f, []int{4}
 }
+
 func (m *GetServerEntryRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetServerEntryRequest.Unmarshal(m, b)
 }
 func (m *GetServerEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetServerEntryRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetServerEntryRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetServerEntryRequest.Merge(dst, src)
+func (m *GetServerEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetServerEntryRequest.Merge(m, src)
 }
 func (m *GetServerEntryRequest) XXX_Size() int {
 	return xxx_messageInfo_GetServerEntryRequest.Size(m)
@@ -406,16 +472,17 @@ func (m *GetServerEntryResponse) Reset()         { *m = GetServerEntryResponse{}
 func (m *GetServerEntryResponse) String() string { return proto.CompactTextString(m) }
 func (*GetServerEntryResponse) ProtoMessage()    {}
 func (*GetServerEntryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{4}
+	return fileDescriptor_d182df6f9a02c67f, []int{5}
 }
+
 func (m *GetServerEntryResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetServerEntryResponse.Unmarshal(m, b)
 }
 func (m *GetServerEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetServerEntryResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetServerEntryResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetServerEntryResponse.Merge(dst, src)
+func (m *GetServerEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetServerEntryResponse.Merge(m, src)
 }
 func (m *GetServerEntryResponse) XXX_Size() int {
 	return xxx_messageInfo_GetServerEntryResponse.Size(m)
@@ -444,16 +511,17 @@ func (m *AddServerEntryRequest) Reset()         { *m = AddServerEntryRequest{} }
 func (m *AddServerEntryRequest) String() string { return proto.CompactTextString(m) }
 func (*AddServerEntryRequest) ProtoMessage()    {}
 func (*AddServerEntryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{5}
+	return fileDescriptor_d182df6f9a02c67f, []int{6}
 }
+
 func (m *AddServerEntryRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AddServerEntryRequest.Unmarshal(m, b)
 }
 func (m *AddServerEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_AddServerEntryRequest.Marshal(b, m, deterministic)
 }
-func (dst *AddServerEntryRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddServerEntryRequest.Merge(dst, src)
+func (m *AddServerEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddServerEntryRequest.Merge(m, src)
 }
 func (m *AddServerEntryRequest) XXX_Size() int {
 	return xxx_messageInfo_AddServerEntryRequest.Size(m)
@@ -481,16 +549,17 @@ func (m *AddServerEntryResponse) Reset()         { *m = AddServerEntryResponse{}
 func (m *AddServerEntryResponse) String() string { return proto.CompactTextString(m) }
 func (*AddServerEntryResponse) ProtoMessage()    {}
 func (*AddServerEntryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{6}
+	return fileDescriptor_d182df6f9a02c67f, []int{7}
 }
+
 func (m *AddServerEntryResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AddServerEntryResponse.Unmarshal(m, b)
 }
 func (m *AddServerEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_AddServerEntryResponse.Marshal(b, m, deterministic)
 }
-func (dst *AddServerEntryResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddServerEntryResponse.Merge(dst, src)
+func (m *AddServerEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddServerEntryResponse.Merge(m, src)
 }
 func (m *AddServerEntryResponse) XXX_Size() int {
 	return xxx_messageInfo_AddServerEntryResponse.Size(m)
@@ -512,16 +581,17 @@ func (m *RemoveServerEntryRequest) Reset()         { *m = RemoveServerEntryReque
 func (m *RemoveServerEntryRequest) String() string { return proto.CompactTextString(m) }
 func (*RemoveServerEntryRequest) ProtoMessage()    {}
 func (*RemoveServerEntryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{7}
+	return fileDescriptor_d182df6f9a02c67f, []int{8}
 }
+
 func (m *RemoveServerEntryRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RemoveServerEntryRequest.Unmarshal(m, b)
 }
 func (m *RemoveServerEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_RemoveServerEntryRequest.Marshal(b, m, deterministic)
 }
-func (dst *RemoveServerEntryRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RemoveServerEntryRequest.Merge(dst, src)
+func (m *RemoveServerEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RemoveServerEntryRequest.Merge(m, src)
 }
 func (m *RemoveServerEntryRequest) XXX_Size() int {
 	return xxx_messageInfo_RemoveServerEntryRequest.Size(m)
@@ -549,16 +619,17 @@ func (m *RemoveServerEntryResponse) Reset()         { *m = RemoveServerEntryResp
 func (m *RemoveServerEntryResponse) String() string { return proto.CompactTextString(m) }
 func (*RemoveServerEntryResponse) ProtoMessage()    {}
 func (*RemoveServerEntryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{8}
+	return fileDescriptor_d182df6f9a02c67f, []int{9}
 }
+
 func (m *RemoveServerEntryResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RemoveServerEntryResponse.Unmarshal(m, b)
 }
 func (m *RemoveServerEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_RemoveServerEntryResponse.Marshal(b, m, deterministic)
 }
-func (dst *RemoveServerEntryResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RemoveServerEntryResponse.Merge(dst, src)
+func (m *RemoveServerEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RemoveServerEntryResponse.Merge(m, src)
 }
 func (m *RemoveServerEntryResponse) XXX_Size() int {
 	return xxx_messageInfo_RemoveServerEntryResponse.Size(m)
@@ -569,9 +640,9 @@ func (m *RemoveServerEntryResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RemoveServerEntryResponse proto.InternalMessageInfo
 
-// --
+//--
 // Bungee Entry
-// --
+//--
 type BungeeEntryStream struct {
 	Type                 BungeeEntryStream_Type `protobuf:"varint,1,opt,name=type,proto3,enum=nebulapb.BungeeEntryStream_Type" json:"type,omitempty"`
 	Entry                *BungeeEntry           `protobuf:"bytes,2,opt,name=entry,proto3" json:"entry,omitempty"`
@@ -584,16 +655,17 @@ func (m *BungeeEntryStream) Reset()         { *m = BungeeEntryStream{} }
 func (m *BungeeEntryStream) String() string { return proto.CompactTextString(m) }
 func (*BungeeEntryStream) ProtoMessage()    {}
 func (*BungeeEntryStream) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{9}
+	return fileDescriptor_d182df6f9a02c67f, []int{10}
 }
+
 func (m *BungeeEntryStream) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BungeeEntryStream.Unmarshal(m, b)
 }
 func (m *BungeeEntryStream) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_BungeeEntryStream.Marshal(b, m, deterministic)
 }
-func (dst *BungeeEntryStream) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BungeeEntryStream.Merge(dst, src)
+func (m *BungeeEntryStream) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BungeeEntryStream.Merge(m, src)
 }
 func (m *BungeeEntryStream) XXX_Size() int {
 	return xxx_messageInfo_BungeeEntryStream.Size(m)
@@ -630,16 +702,17 @@ func (m *BungeeEntry) Reset()         { *m = BungeeEntry{} }
 func (m *BungeeEntry) String() string { return proto.CompactTextString(m) }
 func (*BungeeEntry) ProtoMessage()    {}
 func (*BungeeEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{10}
+	return fileDescriptor_d182df6f9a02c67f, []int{11}
 }
+
 func (m *BungeeEntry) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BungeeEntry.Unmarshal(m, b)
 }
 func (m *BungeeEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_BungeeEntry.Marshal(b, m, deterministic)
 }
-func (dst *BungeeEntry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BungeeEntry.Merge(dst, src)
+func (m *BungeeEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BungeeEntry.Merge(m, src)
 }
 func (m *BungeeEntry) XXX_Size() int {
 	return xxx_messageInfo_BungeeEntry.Size(m)
@@ -674,16 +747,17 @@ func (m *GetBungeeEntryRequest) Reset()         { *m = GetBungeeEntryRequest{} }
 func (m *GetBungeeEntryRequest) String() string { return proto.CompactTextString(m) }
 func (*GetBungeeEntryRequest) ProtoMessage()    {}
 func (*GetBungeeEntryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{11}
+	return fileDescriptor_d182df6f9a02c67f, []int{12}
 }
+
 func (m *GetBungeeEntryRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetBungeeEntryRequest.Unmarshal(m, b)
 }
 func (m *GetBungeeEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetBungeeEntryRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetBungeeEntryRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetBungeeEntryRequest.Merge(dst, src)
+func (m *GetBungeeEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetBungeeEntryRequest.Merge(m, src)
 }
 func (m *GetBungeeEntryRequest) XXX_Size() int {
 	return xxx_messageInfo_GetBungeeEntryRequest.Size(m)
@@ -705,16 +779,17 @@ func (m *GetBungeeEntryResponse) Reset()         { *m = GetBungeeEntryResponse{}
 func (m *GetBungeeEntryResponse) String() string { return proto.CompactTextString(m) }
 func (*GetBungeeEntryResponse) ProtoMessage()    {}
 func (*GetBungeeEntryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{12}
+	return fileDescriptor_d182df6f9a02c67f, []int{13}
 }
+
 func (m *GetBungeeEntryResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetBungeeEntryResponse.Unmarshal(m, b)
 }
 func (m *GetBungeeEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetBungeeEntryResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetBungeeEntryResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetBungeeEntryResponse.Merge(dst, src)
+func (m *GetBungeeEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetBungeeEntryResponse.Merge(m, src)
 }
 func (m *GetBungeeEntryResponse) XXX_Size() int {
 	return xxx_messageInfo_GetBungeeEntryResponse.Size(m)
@@ -743,16 +818,17 @@ func (m *SetMotdRequest) Reset()         { *m = SetMotdRequest{} }
 func (m *SetMotdRequest) String() string { return proto.CompactTextString(m) }
 func (*SetMotdRequest) ProtoMessage()    {}
 func (*SetMotdRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{13}
+	return fileDescriptor_d182df6f9a02c67f, []int{14}
 }
+
 func (m *SetMotdRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SetMotdRequest.Unmarshal(m, b)
 }
 func (m *SetMotdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SetMotdRequest.Marshal(b, m, deterministic)
 }
-func (dst *SetMotdRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SetMotdRequest.Merge(dst, src)
+func (m *SetMotdRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetMotdRequest.Merge(m, src)
 }
 func (m *SetMotdRequest) XXX_Size() int {
 	return xxx_messageInfo_SetMotdRequest.Size(m)
@@ -780,16 +856,17 @@ func (m *SetMotdResponse) Reset()         { *m = SetMotdResponse{} }
 func (m *SetMotdResponse) String() string { return proto.CompactTextString(m) }
 func (*SetMotdResponse) ProtoMessage()    {}
 func (*SetMotdResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{14}
+	return fileDescriptor_d182df6f9a02c67f, []int{15}
 }
+
 func (m *SetMotdResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SetMotdResponse.Unmarshal(m, b)
 }
 func (m *SetMotdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SetMotdResponse.Marshal(b, m, deterministic)
 }
-func (dst *SetMotdResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SetMotdResponse.Merge(dst, src)
+func (m *SetMotdResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetMotdResponse.Merge(m, src)
 }
 func (m *SetMotdResponse) XXX_Size() int {
 	return xxx_messageInfo_SetMotdResponse.Size(m)
@@ -811,16 +888,17 @@ func (m *SetFaviconRequest) Reset()         { *m = SetFaviconRequest{} }
 func (m *SetFaviconRequest) String() string { return proto.CompactTextString(m) }
 func (*SetFaviconRequest) ProtoMessage()    {}
 func (*SetFaviconRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{15}
+	return fileDescriptor_d182df6f9a02c67f, []int{16}
 }
+
 func (m *SetFaviconRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SetFaviconRequest.Unmarshal(m, b)
 }
 func (m *SetFaviconRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SetFaviconRequest.Marshal(b, m, deterministic)
 }
-func (dst *SetFaviconRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SetFaviconRequest.Merge(dst, src)
+func (m *SetFaviconRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetFaviconRequest.Merge(m, src)
 }
 func (m *SetFaviconRequest) XXX_Size() int {
 	return xxx_messageInfo_SetFaviconRequest.Size(m)
@@ -848,16 +926,17 @@ func (m *SetFaviconResponse) Reset()         { *m = SetFaviconResponse{} }
 func (m *SetFaviconResponse) String() string { return proto.CompactTextString(m) }
 func (*SetFaviconResponse) ProtoMessage()    {}
 func (*SetFaviconResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_nebulapb_cc8ae8e66853e5ed, []int{16}
+	return fileDescriptor_d182df6f9a02c67f, []int{17}
 }
+
 func (m *SetFaviconResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SetFaviconResponse.Unmarshal(m, b)
 }
 func (m *SetFaviconResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SetFaviconResponse.Marshal(b, m, deterministic)
 }
-func (dst *SetFaviconResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SetFaviconResponse.Merge(dst, src)
+func (m *SetFaviconResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetFaviconResponse.Merge(m, src)
 }
 func (m *SetFaviconResponse) XXX_Size() int {
 	return xxx_messageInfo_SetFaviconResponse.Size(m)
@@ -868,9 +947,98 @@ func (m *SetFaviconResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SetFaviconResponse proto.InternalMessageInfo
 
+type SetLockdownRequest struct {
+	Name                 string    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Lockdown             *Lockdown `protobuf:"bytes,2,opt,name=lockdown,proto3" json:"lockdown,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *SetLockdownRequest) Reset()         { *m = SetLockdownRequest{} }
+func (m *SetLockdownRequest) String() string { return proto.CompactTextString(m) }
+func (*SetLockdownRequest) ProtoMessage()    {}
+func (*SetLockdownRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d182df6f9a02c67f, []int{18}
+}
+
+func (m *SetLockdownRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SetLockdownRequest.Unmarshal(m, b)
+}
+func (m *SetLockdownRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SetLockdownRequest.Marshal(b, m, deterministic)
+}
+func (m *SetLockdownRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetLockdownRequest.Merge(m, src)
+}
+func (m *SetLockdownRequest) XXX_Size() int {
+	return xxx_messageInfo_SetLockdownRequest.Size(m)
+}
+func (m *SetLockdownRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SetLockdownRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SetLockdownRequest proto.InternalMessageInfo
+
+func (m *SetLockdownRequest) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *SetLockdownRequest) GetLockdown() *Lockdown {
+	if m != nil {
+		return m.Lockdown
+	}
+	return nil
+}
+
+type SetLockdownResponse struct {
+	Entry                *ServerEntry `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *SetLockdownResponse) Reset()         { *m = SetLockdownResponse{} }
+func (m *SetLockdownResponse) String() string { return proto.CompactTextString(m) }
+func (*SetLockdownResponse) ProtoMessage()    {}
+func (*SetLockdownResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d182df6f9a02c67f, []int{19}
+}
+
+func (m *SetLockdownResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SetLockdownResponse.Unmarshal(m, b)
+}
+func (m *SetLockdownResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SetLockdownResponse.Marshal(b, m, deterministic)
+}
+func (m *SetLockdownResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetLockdownResponse.Merge(m, src)
+}
+func (m *SetLockdownResponse) XXX_Size() int {
+	return xxx_messageInfo_SetLockdownResponse.Size(m)
+}
+func (m *SetLockdownResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SetLockdownResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SetLockdownResponse proto.InternalMessageInfo
+
+func (m *SetLockdownResponse) GetEntry() *ServerEntry {
+	if m != nil {
+		return m.Entry
+	}
+	return nil
+}
+
 func init() {
+	proto.RegisterEnum("nebulapb.ServerEntryStream_Type", ServerEntryStream_Type_name, ServerEntryStream_Type_value)
+	proto.RegisterEnum("nebulapb.BungeeEntryStream_Type", BungeeEntryStream_Type_name, BungeeEntryStream_Type_value)
 	proto.RegisterType((*ServerEntryStream)(nil), "nebulapb.ServerEntryStream")
 	proto.RegisterType((*ServerEntry)(nil), "nebulapb.ServerEntry")
+	proto.RegisterType((*Lockdown)(nil), "nebulapb.Lockdown")
 	proto.RegisterType((*ServerStatus)(nil), "nebulapb.ServerStatus")
 	proto.RegisterType((*ServerStatus_Version)(nil), "nebulapb.ServerStatus.Version")
 	proto.RegisterType((*ServerStatus_Players)(nil), "nebulapb.ServerStatus.Players")
@@ -888,17 +1056,74 @@ func init() {
 	proto.RegisterType((*SetMotdResponse)(nil), "nebulapb.SetMotdResponse")
 	proto.RegisterType((*SetFaviconRequest)(nil), "nebulapb.SetFaviconRequest")
 	proto.RegisterType((*SetFaviconResponse)(nil), "nebulapb.SetFaviconResponse")
-	proto.RegisterEnum("nebulapb.ServerEntryStream_Type", ServerEntryStream_Type_name, ServerEntryStream_Type_value)
-	proto.RegisterEnum("nebulapb.BungeeEntryStream_Type", BungeeEntryStream_Type_name, BungeeEntryStream_Type_value)
+	proto.RegisterType((*SetLockdownRequest)(nil), "nebulapb.SetLockdownRequest")
+	proto.RegisterType((*SetLockdownResponse)(nil), "nebulapb.SetLockdownResponse")
+}
+
+func init() {
+	proto.RegisterFile("nebulapb.proto", fileDescriptor_d182df6f9a02c67f)
+}
+
+var fileDescriptor_d182df6f9a02c67f = []byte{
+	// 771 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x55, 0x4d, 0x6f, 0xd3, 0x4c,
+	0x10, 0x8e, 0xd3, 0x7c, 0xf8, 0x9d, 0x54, 0x79, 0x93, 0x85, 0x06, 0xd7, 0x2d, 0x60, 0x19, 0x0e,
+	0x91, 0x10, 0x3e, 0xa4, 0x1c, 0x40, 0x5c, 0x20, 0x90, 0x22, 0xa4, 0xb6, 0x54, 0x1b, 0xa8, 0xe0,
+	0x82, 0xe4, 0xc4, 0x5b, 0x1a, 0xd5, 0xb1, 0x8d, 0xbd, 0x09, 0xe4, 0xc8, 0x8d, 0x1f, 0xc0, 0x6f,
+	0x42, 0xfc, 0x2c, 0xb4, 0xeb, 0xb5, 0xb3, 0xfe, 0x08, 0xe9, 0xcd, 0xb3, 0xf3, 0xcc, 0xb3, 0x33,
+	0xb3, 0xcf, 0x8c, 0xa1, 0xed, 0x91, 0xc9, 0xc2, 0xb5, 0x83, 0x89, 0x15, 0x84, 0x3e, 0xf5, 0x91,
+	0x9a, 0xd8, 0xe6, 0x2f, 0x05, 0xba, 0x63, 0x12, 0x2e, 0x49, 0x38, 0xf2, 0x68, 0xb8, 0x1a, 0xd3,
+	0x90, 0xd8, 0x73, 0xf4, 0x04, 0x6a, 0x74, 0x15, 0x10, 0x4d, 0x31, 0x94, 0x7e, 0x7b, 0x60, 0x58,
+	0x69, 0x78, 0x01, 0x6a, 0xbd, 0x5f, 0x05, 0x04, 0x73, 0x34, 0x7a, 0x04, 0x75, 0xc2, 0x3c, 0x5a,
+	0xd5, 0x50, 0xfa, 0xad, 0xc1, 0x5e, 0x69, 0x18, 0x8e, 0x31, 0xe6, 0x21, 0xd4, 0x58, 0x28, 0x52,
+	0xa1, 0x36, 0xfe, 0x74, 0xf6, 0xaa, 0x53, 0x41, 0x00, 0x0d, 0x3c, 0x3a, 0x7d, 0x77, 0x31, 0xea,
+	0x28, 0xe6, 0x8f, 0x2a, 0xb4, 0xa4, 0x20, 0x84, 0xa0, 0xe6, 0xd9, 0xf3, 0x38, 0xa1, 0xff, 0x30,
+	0xff, 0x46, 0x06, 0xb4, 0x9c, 0x59, 0x14, 0xb8, 0xf6, 0xea, 0x8c, 0xb9, 0xaa, 0xdc, 0x25, 0x1f,
+	0x21, 0x0d, 0x9a, 0xb6, 0xe3, 0x84, 0x24, 0x8a, 0xb4, 0x1d, 0xee, 0x4d, 0x4c, 0xc6, 0x17, 0xf8,
+	0x21, 0xd5, 0x6a, 0x86, 0xd2, 0xaf, 0x63, 0xfe, 0xcd, 0xce, 0xe6, 0x3e, 0x75, 0xb4, 0x7a, 0x7c,
+	0x07, 0xfb, 0x46, 0x3a, 0xa8, 0x97, 0xb6, 0xeb, 0x4e, 0xec, 0xe9, 0xb5, 0xd6, 0x30, 0x94, 0xbe,
+	0x8a, 0x53, 0x1b, 0x59, 0xa0, 0xba, 0xfe, 0xf4, 0xda, 0xf1, 0xbf, 0x79, 0x5a, 0x93, 0x57, 0x8c,
+	0xd6, 0x15, 0x9f, 0x08, 0x0f, 0x4e, 0x31, 0xc8, 0x82, 0x46, 0x44, 0x6d, 0xba, 0x88, 0x34, 0x95,
+	0xa3, 0x7b, 0xf9, 0xfe, 0x8c, 0xb9, 0x17, 0x0b, 0x94, 0x79, 0x0c, 0x6a, 0xc2, 0xc2, 0x2a, 0x21,
+	0x9e, 0x3d, 0x71, 0x89, 0xc3, 0x5b, 0xa0, 0xe2, 0xc4, 0xe4, 0x5d, 0x20, 0xd1, 0x34, 0x9c, 0x05,
+	0x74, 0xe6, 0x7b, 0x69, 0x17, 0xd6, 0x47, 0xe6, 0xef, 0x2a, 0xec, 0xca, 0x17, 0xa0, 0x1e, 0x34,
+	0x7c, 0xcf, 0x9d, 0x79, 0x44, 0x70, 0x09, 0x0b, 0x3d, 0x85, 0xe6, 0x92, 0x84, 0x51, 0x42, 0xd3,
+	0x1a, 0xdc, 0x2b, 0xcf, 0xd0, 0xba, 0x88, 0x51, 0x38, 0x81, 0xb3, 0x48, 0xd6, 0x74, 0x12, 0xc6,
+	0x8d, 0xde, 0x1c, 0x79, 0x1e, 0xa3, 0x70, 0x02, 0xcf, 0xa7, 0x5f, 0x2b, 0xa4, 0xcf, 0x4a, 0xbf,
+	0xb4, 0x97, 0xb3, 0xa9, 0xef, 0x89, 0x97, 0x49, 0x4c, 0xfd, 0x19, 0x34, 0x45, 0x26, 0xa5, 0xfa,
+	0xd0, 0x41, 0xe5, 0x6a, 0x9f, 0xfa, 0x2e, 0xaf, 0xa7, 0x8e, 0x53, 0x5b, 0x3f, 0x82, 0xa6, 0x48,
+	0x05, 0x75, 0x60, 0x67, 0x6e, 0x7f, 0xe7, 0x91, 0x75, 0xcc, 0x3e, 0xa5, 0xfe, 0xc4, 0x61, 0xc2,
+	0x32, 0xef, 0xc0, 0xde, 0x1b, 0x42, 0x65, 0x2d, 0x93, 0xaf, 0x0b, 0x12, 0x51, 0x73, 0x04, 0xbd,
+	0xbc, 0x23, 0x0a, 0x7c, 0x2f, 0x92, 0x46, 0x42, 0x31, 0x76, 0xb6, 0x8e, 0xc4, 0x6b, 0xd8, 0x7b,
+	0xe9, 0x38, 0x45, 0x7e, 0x99, 0x65, 0xfb, 0x60, 0x69, 0xd0, 0xcb, 0xb3, 0xc4, 0xc9, 0x98, 0x16,
+	0x68, 0x98, 0xcc, 0xfd, 0x25, 0x29, 0xb9, 0xa2, 0xa4, 0x81, 0xe6, 0x01, 0xec, 0x97, 0xe0, 0x05,
+	0xd9, 0x4f, 0x05, 0xba, 0xc3, 0x85, 0xf7, 0x85, 0x90, 0x1b, 0x2d, 0x8e, 0x02, 0xf4, 0x66, 0x8b,
+	0x43, 0x0a, 0x4b, 0xea, 0xeb, 0xe4, 0x17, 0x87, 0xf9, 0x1c, 0x5a, 0x12, 0x2e, 0x9d, 0x63, 0x45,
+	0x9a, 0x63, 0x49, 0x44, 0xd5, 0x8c, 0x88, 0xc4, 0xa3, 0xca, 0xf7, 0x64, 0x1e, 0x35, 0xe3, 0x28,
+	0x3e, 0xea, 0xf6, 0x74, 0x1f, 0x42, 0x7b, 0x4c, 0xe8, 0xa9, 0x4f, 0x1d, 0xa9, 0xd5, 0xf9, 0xfc,
+	0xcc, 0x2e, 0xfc, 0x9f, 0xa2, 0x44, 0x83, 0x1f, 0xb3, 0xc5, 0x4c, 0x8f, 0xe3, 0x34, 0x93, 0x58,
+	0xa9, 0x0e, 0x25, 0x5b, 0xc7, 0x6d, 0x40, 0x32, 0x5c, 0x90, 0x7c, 0xe4, 0xa7, 0xe9, 0x32, 0xda,
+	0xfc, 0xd8, 0x99, 0x6d, 0x56, 0xdd, 0xbe, 0xcd, 0xcc, 0x21, 0xdc, 0xca, 0x30, 0x6f, 0xed, 0x4d,
+	0x51, 0xaa, 0x83, 0x3f, 0x35, 0x68, 0x9c, 0x71, 0x3f, 0xfa, 0x00, 0xed, 0xec, 0x08, 0xa1, 0xfb,
+	0xeb, 0xd0, 0xd2, 0xa9, 0xd3, 0x8d, 0xcd, 0x00, 0x51, 0x7d, 0x85, 0xd1, 0x66, 0x87, 0x41, 0xa6,
+	0x2d, 0x1d, 0x36, 0x99, 0x76, 0xc3, 0x1c, 0x55, 0xd0, 0x67, 0xe8, 0x16, 0x26, 0x03, 0x99, 0xeb,
+	0xc0, 0x4d, 0x63, 0xa6, 0x3f, 0xf8, 0x27, 0x46, 0x4e, 0x3b, 0xab, 0xbd, 0x5c, 0x37, 0x8a, 0x72,
+	0xcd, 0x75, 0xa3, 0x44, 0xb6, 0x66, 0x05, 0xbd, 0x80, 0xa6, 0x50, 0x19, 0xd2, 0xe4, 0x87, 0x91,
+	0xe5, 0xa9, 0xef, 0x97, 0x78, 0x52, 0x86, 0xb7, 0x00, 0x6b, 0x95, 0xa1, 0x83, 0x0c, 0x34, 0x2b,
+	0x55, 0xfd, 0xb0, 0xdc, 0x99, 0x52, 0x9d, 0xb0, 0x3f, 0x7c, 0x2a, 0x20, 0x94, 0x85, 0xe7, 0x14,
+	0xab, 0xdf, 0xdd, 0xe0, 0x4d, 0xd8, 0x86, 0x7d, 0xd0, 0x3c, 0x42, 0xad, 0x68, 0xe5, 0x4d, 0xaf,
+	0xe8, 0xd5, 0xcc, 0xb6, 0xec, 0x60, 0x26, 0x62, 0x86, 0xbb, 0xb1, 0xc6, 0xce, 0xd9, 0xf2, 0x8f,
+	0x26, 0x0d, 0xfe, 0x13, 0x38, 0xfa, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x99, 0xc1, 0x5a, 0x47, 0x14,
+	0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // NebulaClient is the client API for Nebula service.
 //
@@ -916,13 +1141,15 @@ type NebulaClient interface {
 	SetMotd(ctx context.Context, in *SetMotdRequest, opts ...grpc.CallOption) (*SetMotdResponse, error)
 	// API <- App
 	SetFavicon(ctx context.Context, in *SetFaviconRequest, opts ...grpc.CallOption) (*SetFaviconResponse, error)
+	// API <- App
+	SetLockdown(ctx context.Context, in *SetLockdownRequest, opts ...grpc.CallOption) (*SetLockdownResponse, error)
 }
 
 type nebulaClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewNebulaClient(cc *grpc.ClientConn) NebulaClient {
+func NewNebulaClient(cc grpc.ClientConnInterface) NebulaClient {
 	return &nebulaClient{cc}
 }
 
@@ -980,6 +1207,15 @@ func (c *nebulaClient) SetFavicon(ctx context.Context, in *SetFaviconRequest, op
 	return out, nil
 }
 
+func (c *nebulaClient) SetLockdown(ctx context.Context, in *SetLockdownRequest, opts ...grpc.CallOption) (*SetLockdownResponse, error) {
+	out := new(SetLockdownResponse)
+	err := c.cc.Invoke(ctx, "/nebulapb.Nebula/SetLockdown", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NebulaServer is the server API for Nebula service.
 type NebulaServer interface {
 	// API -> Bungee (ServerEntry)
@@ -994,6 +1230,34 @@ type NebulaServer interface {
 	SetMotd(context.Context, *SetMotdRequest) (*SetMotdResponse, error)
 	// API <- App
 	SetFavicon(context.Context, *SetFaviconRequest) (*SetFaviconResponse, error)
+	// API <- App
+	SetLockdown(context.Context, *SetLockdownRequest) (*SetLockdownResponse, error)
+}
+
+// UnimplementedNebulaServer can be embedded to have forward compatible implementations.
+type UnimplementedNebulaServer struct {
+}
+
+func (*UnimplementedNebulaServer) GetServerEntry(ctx context.Context, req *GetServerEntryRequest) (*GetServerEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetServerEntry not implemented")
+}
+func (*UnimplementedNebulaServer) AddServerEntry(ctx context.Context, req *AddServerEntryRequest) (*AddServerEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddServerEntry not implemented")
+}
+func (*UnimplementedNebulaServer) RemoveServerEntry(ctx context.Context, req *RemoveServerEntryRequest) (*RemoveServerEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveServerEntry not implemented")
+}
+func (*UnimplementedNebulaServer) GetBungeeEntry(ctx context.Context, req *GetBungeeEntryRequest) (*GetBungeeEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBungeeEntry not implemented")
+}
+func (*UnimplementedNebulaServer) SetMotd(ctx context.Context, req *SetMotdRequest) (*SetMotdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetMotd not implemented")
+}
+func (*UnimplementedNebulaServer) SetFavicon(ctx context.Context, req *SetFaviconRequest) (*SetFaviconResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetFavicon not implemented")
+}
+func (*UnimplementedNebulaServer) SetLockdown(ctx context.Context, req *SetLockdownRequest) (*SetLockdownResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetLockdown not implemented")
 }
 
 func RegisterNebulaServer(s *grpc.Server, srv NebulaServer) {
@@ -1108,6 +1372,24 @@ func _Nebula_SetFavicon_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Nebula_SetLockdown_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetLockdownRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NebulaServer).SetLockdown(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nebulapb.Nebula/SetLockdown",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NebulaServer).SetLockdown(ctx, req.(*SetLockdownRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Nebula_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "nebulapb.Nebula",
 	HandlerType: (*NebulaServer)(nil),
@@ -1136,56 +1418,11 @@ var _Nebula_serviceDesc = grpc.ServiceDesc{
 			MethodName: "SetFavicon",
 			Handler:    _Nebula_SetFavicon_Handler,
 		},
+		{
+			MethodName: "SetLockdown",
+			Handler:    _Nebula_SetLockdown_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "nebulapb.proto",
-}
-
-func init() { proto.RegisterFile("nebulapb.proto", fileDescriptor_nebulapb_cc8ae8e66853e5ed) }
-
-var fileDescriptor_nebulapb_cc8ae8e66853e5ed = []byte{
-	// 687 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0xcd, 0x6e, 0xd3, 0x4c,
-	0x14, 0x8d, 0xf3, 0xff, 0xdd, 0x54, 0xf9, 0x92, 0x11, 0x0d, 0xae, 0x5b, 0x81, 0x65, 0x58, 0x44,
-	0x42, 0x78, 0xd1, 0xb2, 0x00, 0xb1, 0x81, 0x42, 0x40, 0x2c, 0x5a, 0xaa, 0x09, 0x54, 0x62, 0x83,
-	0x34, 0x89, 0xa7, 0xd4, 0x22, 0xb1, 0x8d, 0x67, 0x12, 0x91, 0x37, 0xe0, 0x01, 0x78, 0x26, 0xf6,
-	0xbc, 0x0e, 0x2b, 0x34, 0x3f, 0x4e, 0xc6, 0x8e, 0x43, 0xbb, 0x9b, 0xeb, 0x7b, 0xce, 0x99, 0xfb,
-	0x73, 0xc6, 0xd0, 0x8d, 0xe8, 0x64, 0x31, 0x23, 0xc9, 0xc4, 0x4f, 0xd2, 0x98, 0xc7, 0xa8, 0x9d,
-	0xc5, 0xde, 0x4f, 0x0b, 0xfa, 0x63, 0x9a, 0x2e, 0x69, 0x3a, 0x8a, 0x78, 0xba, 0x1a, 0xf3, 0x94,
-	0x92, 0x39, 0x7a, 0x02, 0x75, 0xbe, 0x4a, 0xa8, 0x6d, 0xb9, 0xd6, 0xb0, 0x7b, 0xec, 0xfa, 0x6b,
-	0xfa, 0x16, 0xd4, 0xff, 0xb0, 0x4a, 0x28, 0x96, 0x68, 0xf4, 0x08, 0x1a, 0x54, 0x64, 0xec, 0xaa,
-	0x6b, 0x0d, 0x3b, 0xc7, 0xfb, 0xa5, 0x34, 0xac, 0x30, 0xde, 0x11, 0xd4, 0x05, 0x15, 0xb5, 0xa1,
-	0x3e, 0xfe, 0x74, 0xfe, 0xaa, 0x57, 0x41, 0x00, 0x4d, 0x3c, 0x3a, 0x7b, 0x7f, 0x39, 0xea, 0x59,
-	0xde, 0x6f, 0x0b, 0x3a, 0x06, 0x09, 0x21, 0xa8, 0x47, 0x64, 0xae, 0x0a, 0xfa, 0x0f, 0xcb, 0x33,
-	0x72, 0xa1, 0x13, 0x84, 0x2c, 0x99, 0x91, 0xd5, 0xb9, 0x48, 0x55, 0x65, 0xca, 0xfc, 0x84, 0x6c,
-	0x68, 0x91, 0x20, 0x48, 0x29, 0x63, 0x76, 0x4d, 0x66, 0xb3, 0x50, 0xe8, 0x25, 0x71, 0xca, 0xed,
-	0xba, 0x6b, 0x0d, 0x1b, 0x58, 0x9e, 0xc5, 0xb7, 0x79, 0xcc, 0x03, 0xbb, 0xa1, 0xee, 0x10, 0x67,
-	0xe4, 0x40, 0xfb, 0x8a, 0xcc, 0x66, 0x13, 0x32, 0xfd, 0x6a, 0x37, 0x5d, 0x6b, 0xd8, 0xc6, 0xeb,
-	0x18, 0xf9, 0xd0, 0x64, 0x9c, 0xf0, 0x05, 0xb3, 0x5b, 0xb2, 0xdf, 0x41, 0xb1, 0xdf, 0xb1, 0xcc,
-	0x62, 0x8d, 0xf2, 0x7e, 0x55, 0x61, 0xcf, 0x4c, 0xa0, 0x01, 0x34, 0xe3, 0x68, 0x16, 0x46, 0xaa,
-	0xad, 0x36, 0xd6, 0x11, 0x7a, 0x0a, 0xad, 0x25, 0x4d, 0x59, 0x18, 0x47, 0x7a, 0x92, 0xf7, 0xca,
-	0x95, 0xfd, 0x4b, 0x85, 0xc2, 0x19, 0x5c, 0x30, 0x45, 0xf3, 0x34, 0x55, 0x0d, 0xef, 0x66, 0x5e,
-	0x28, 0x14, 0xce, 0xe0, 0x72, 0x98, 0x94, 0x4d, 0xd3, 0x30, 0xe1, 0xe2, 0xde, 0xba, 0x1e, 0xe6,
-	0xe6, 0x93, 0x18, 0xe6, 0x15, 0x59, 0x86, 0xd3, 0x38, 0xd2, 0x13, 0xca, 0x42, 0xe7, 0x19, 0xb4,
-	0x74, 0x25, 0xa5, 0x7b, 0x72, 0xa0, 0x2d, 0x5d, 0x37, 0x8d, 0x67, 0xb2, 0x9f, 0x06, 0x5e, 0xc7,
-	0xce, 0x09, 0xb4, 0x74, 0x29, 0xa8, 0x07, 0xb5, 0x39, 0xf9, 0x2e, 0x99, 0x0d, 0x2c, 0x8e, 0xc6,
-	0x7c, 0x14, 0x4d, 0x47, 0xde, 0x5d, 0xd8, 0x7f, 0x4b, 0xb9, 0xe9, 0x29, 0xfa, 0x6d, 0x41, 0x19,
-	0xf7, 0x46, 0x30, 0x28, 0x26, 0x58, 0x12, 0x47, 0xcc, 0xb0, 0xa6, 0xe5, 0xd6, 0x6e, 0xb4, 0xe6,
-	0x6b, 0xd8, 0x7f, 0x19, 0x04, 0xdb, 0xfa, 0xa6, 0xca, 0xcd, 0x06, 0xb7, 0x61, 0x50, 0x54, 0x51,
-	0xc5, 0x78, 0x3e, 0xd8, 0x98, 0xce, 0xe3, 0x25, 0x2d, 0xb9, 0xa2, 0x64, 0x80, 0xde, 0x21, 0x1c,
-	0x94, 0xe0, 0xb5, 0xd8, 0x0f, 0x0b, 0xfa, 0xa7, 0x8b, 0xe8, 0x0b, 0xa5, 0xb7, 0x7a, 0xc0, 0x5b,
-	0xd0, 0xdb, 0x3d, 0x60, 0x83, 0x96, 0xf5, 0xd7, 0x2b, 0x3e, 0x60, 0xef, 0x39, 0x74, 0x0c, 0xdc,
-	0xfa, 0x3d, 0x59, 0xc6, 0x7b, 0x32, 0x4c, 0x54, 0xcd, 0x99, 0x48, 0x2f, 0xd5, 0xbc, 0x27, 0xb7,
-	0xd4, 0x5c, 0x62, 0x7b, 0xa9, 0x37, 0x97, 0xfb, 0x10, 0xba, 0x63, 0xca, 0xcf, 0x62, 0x1e, 0x18,
-	0xa3, 0x2e, 0xd6, 0xe7, 0xf5, 0xe1, 0xff, 0x35, 0x4a, 0x0f, 0xf8, 0xb1, 0xf8, 0x41, 0xf2, 0x37,
-	0xaa, 0xcc, 0x8c, 0x6b, 0xf4, 0x61, 0xe5, 0xfb, 0xb8, 0x03, 0xc8, 0x84, 0x2b, 0x91, 0xe3, 0x3f,
-	0x35, 0x68, 0x9e, 0xcb, 0xea, 0xd0, 0x47, 0xe8, 0xe6, 0x4d, 0x8a, 0xee, 0x6f, 0x0a, 0x2f, 0xf5,
-	0xb5, 0xe3, 0xee, 0x06, 0xe8, 0x22, 0x2b, 0x42, 0x36, 0x6f, 0x37, 0x53, 0xb6, 0xd4, 0xce, 0xa6,
-	0xec, 0x0e, 0xa7, 0x56, 0xd0, 0x67, 0xe8, 0x6f, 0x79, 0x0f, 0x79, 0x1b, 0xe2, 0x2e, 0x23, 0x3b,
-	0x0f, 0xfe, 0x89, 0x31, 0xcb, 0xce, 0x6f, 0xb7, 0x30, 0x8d, 0x6d, 0x43, 0x14, 0xa6, 0x51, 0x62,
-	0x0c, 0xaf, 0x82, 0x5e, 0x40, 0x4b, 0xef, 0x11, 0xd9, 0xe6, 0x2b, 0x35, 0x0d, 0xe0, 0x1c, 0x94,
-	0x64, 0xd6, 0x0a, 0xef, 0x00, 0x36, 0x7b, 0x44, 0x87, 0x39, 0x68, 0xde, 0x0c, 0xce, 0x51, 0x79,
-	0x32, 0x93, 0x3a, 0x1d, 0x82, 0x1d, 0x51, 0xee, 0xb3, 0x55, 0x34, 0xbd, 0xe6, 0xd7, 0x21, 0xf1,
-	0x49, 0x12, 0x6a, 0xca, 0xe9, 0x9e, 0x72, 0xc5, 0x85, 0xf8, 0x21, 0xb2, 0x49, 0x53, 0xfe, 0x18,
-	0x4f, 0xfe, 0x06, 0x00, 0x00, 0xff, 0xff, 0x82, 0xfe, 0x25, 0x37, 0xb0, 0x07, 0x00, 0x00,
 }
