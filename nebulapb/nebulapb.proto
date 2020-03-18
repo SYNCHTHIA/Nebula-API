@@ -121,4 +121,6 @@ message SetLockdownRequest {
     Lockdown lockdown = 2;
 }
 
-message SetLockdownResponse {}
+message SetLockdownResponse {
+    ServerEntry entry = 1;
+}

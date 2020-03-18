@@ -116,7 +116,20 @@ func (s *grpcServer) SetFavicon(ctx context.Context, e *pb.SetFaviconRequest) (*
 }
 
 func (s *grpcServer) SetLockdown(ctx context.Context, e *pb.SetLockdownRequest) (*pb.SetLockdownResponse, error) {
-	return &pb.SetLockdownResponse{}, nil
+	if e.Lockdown.Enabled && e.Lockdown.Description == "" {
+		e.Lockdown.Description = "&cThis server currently not available"
+	}
+
+	if err := database.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
+		return &pb.SetLockdownResponse{}, err
+	}
+
+	entry, err := database.GetServerEntry(e.Name)
+	if err == nil {
+		stream.PublishServer(s.ServerEntry_DBtoPB(entry))
+	}
+
+	return &pb.SetLockdownResponse{Entry: s.ServerEntry_DBtoPB(entry)}, err
 }
 
 func (s *grpcServer) BungeeEntry_DBtoPB(dbEntry database.BungeeData) *pb.BungeeEntry {
@@ -170,6 +183,6 @@ func (s *grpcServer) ServerEntry_PBtoDB(pbEntry *pb.ServerEntry) database.Server
 		Port:        pbEntry.Port,
 		Motd:        pbEntry.Motd,
 		Fallback:    pbEntry.Fallback,
-		Lockdown:    (&database.Lockdown{}).FromProtobuf(pbEntry.Lockdown),
+		Lockdown:    database.LockdownFromProtobuf(pbEntry.Lockdown),
 	}
 }

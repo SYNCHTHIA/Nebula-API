@@ -17,20 +17,28 @@ type ServerData struct {
 	Port        int32         `json:"port" bson:"port"`
 	Motd        string        `json:"motd" bson:"motd"`
 	Fallback    bool          `bson:"fallback"`
-	Lockdown    *Lockdown     `bson:"lockdown"`
+	Lockdown    Lockdown      `bson:"lockdown"`
 	Status      PingResponse  `bson:"status"`
 	//Status      StatusData    `json:"status" bson:"status"`
 }
 
+// Lockdown - Server lockdown entry
 type Lockdown struct {
 	Enabled     bool   `bson:"enabled"`
-	Description string `bson:"description"`
+	Description string `bson:"description,omitempty"`
 }
 
-func (l *Lockdown) FromProtobuf(pb *nebulapb.Lockdown) *Lockdown {
-	l.Enabled = pb.Enabled
-	l.Description = pb.Description
-	return l
+func LockdownFromProtobuf(pb *nebulapb.Lockdown) Lockdown {
+	if pb == nil {
+		return Lockdown{
+			Enabled: false,
+		}
+	}
+
+	return Lockdown{
+		Enabled:     pb.Enabled,
+		Description: pb.Description,
+	}
 }
 
 func (l *Lockdown) ToProtobuf() *nebulapb.Lockdown {
