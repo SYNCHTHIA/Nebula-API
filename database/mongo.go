@@ -1,48 +1,53 @@
 package database
 
 import (
-	"errors"
-	"strings"
+	"context"
 	"time"
 
-	"github.com/globalsign/mgo"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-var session *mgo.Session
-
-// NewMongoSession - Connect to MongoDB
-func NewMongoSession(address string) {
-	addresses := strings.Split(address, ",")
-	logrus.WithFields(logrus.Fields{
-		"servers": addresses,
-	}).Infof("[MongoDB] Connecting...")
-
-	di := &mgo.DialInfo{
-		Addrs:    addresses,
-		FailFast: true,
-		Timeout:  5 * time.Second,
-	}
-
-	s, err := mgo.DialWithInfo(di)
-	if err != nil {
-		logrus.WithError(err).Errorf("[MongoDB] Failed Connection")
-		NewMongoSession(address)
-
-		//session = nil
-		return
-	}
-
-	//log.Printf("[MongoDB] Connected!")
-	logrus.Printf("[MongoDB] Connected!")
-
-	session = s
+type Mongo struct {
+	client   *mongo.Client
+	database string
 }
 
-func GetMongoSession() (*mgo.Session, error) {
-	if session == nil {
-		return nil, errors.New("mongo session is not establish")
+// NewMongoClient - New MongoDB Client
+func NewMongoClient(mongoConStr, database string) *Mongo {
+	logrus.WithField("connection", mongoConStr).Infof("[MongoDB] Connecting to MongoDB...")
+
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoConStr))
+	if err != nil {
+		logrus.WithError(err).WithField("connection", mongoConStr).Fatalf("[MongoDB] Failed ensure Client of MongoDB")
+		return nil
 	}
 
-	return session, nil
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	err = client.Connect(ctx)
+	if err != nil {
+		logrus.WithError(err).WithField("connection", mongoConStr).Fatalf("[MongoDB] Failed connect to MongoDB")
+		return nil
+	}
+	err = client.Ping(context.Background(), readpref.Primary())
+	if err != nil {
+		logrus.WithError(err).WithField("connection", mongoConStr).Fatalf("[MongoDB] Failed ping to MongoDB")
+		return nil
+	}
+
+	logrus.Infof("[MongoDB] Connected to MongoDB")
+
+	return &Mongo{
+		client:   client,
+		database: database,
+	}
+}
+
+func getContext() (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	return ctx, cancel
 }

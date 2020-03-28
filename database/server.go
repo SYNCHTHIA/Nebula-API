@@ -3,22 +3,24 @@ package database
 import (
 	"errors"
 
-	"github.com/globalsign/mgo/bson"
 	"github.com/sirupsen/logrus"
 	"github.com/synchthia/nebula-api/nebulapb"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // ServerData - Server List Data
 type ServerData struct {
-	ID          bson.ObjectId `bson:"_id,omitempty"`
-	Name        string        `json:"name" bson:"name"`
-	DisplayName string        `json:"display_name" bson:"display_name"`
-	Address     string        `json:"address" bson:"address"`
-	Port        int32         `json:"port" bson:"port"`
-	Motd        string        `json:"motd" bson:"motd"`
-	Fallback    bool          `bson:"fallback"`
-	Lockdown    Lockdown      `bson:"lockdown"`
-	Status      PingResponse  `bson:"status"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	Name        string             `json:"name" bson:"name"`
+	DisplayName string             `json:"display_name" bson:"display_name"`
+	Address     string             `json:"address" bson:"address"`
+	Port        int32              `json:"port" bson:"port"`
+	Motd        string             `json:"motd" bson:"motd"`
+	Fallback    bool               `bson:"fallback"`
+	Lockdown    Lockdown           `bson:"lockdown"`
+	Status      PingResponse       `bson:"status"`
 	//Status      StatusData    `json:"status" bson:"status"`
 }
 
@@ -74,16 +76,20 @@ type PlayersData struct {
 }*/
 
 // GetAllServerEntry - Get All Server Entries
-func GetAllServerEntry() ([]ServerData, error) {
-	session := session.Copy()
-	defer session.Close()
-	coll := session.DB("nebula").C("servers")
+func (m *Mongo) GetAllServerEntry() ([]ServerData, error) {
+	ctx, cancel := getContext()
+	defer cancel()
+	coll := m.client.Database(m.database).Collection("servers")
 
 	var servers []ServerData
 
-	err := coll.Find(bson.M{}).All(&servers)
+	r, err := coll.Find(ctx, bson.M{})
 	if err != nil {
-		logrus.WithError(err).Errorf("[Server] Failed Find ServerEntry: %s", err)
+		logrus.WithError(err).Errorf("[Server] Failed Find ServerEntry")
+		return nil, err
+	}
+
+	if err := r.All(ctx, &servers); err != nil {
 		return nil, err
 	}
 
@@ -91,14 +97,18 @@ func GetAllServerEntry() ([]ServerData, error) {
 }
 
 // GetServerEntry - Get Individual Server Entry
-func GetServerEntry(name string) (ServerData, error) {
-	session := session.Copy()
-	defer session.Close()
-	coll := session.DB("nebula").C("servers")
+func (m *Mongo) GetServerEntry(name string) (ServerData, error) {
+	ctx, cancel := getContext()
+	defer cancel()
+	coll := m.client.Database(m.database).Collection("servers")
 
 	server := ServerData{}
-	err := coll.Find(bson.M{"name": name}).One(&server)
-	if err != nil {
+	r := coll.FindOne(ctx, bson.M{"name": name})
+	if r.Err() != nil {
+		return ServerData{}, r.Err()
+	}
+
+	if err := r.Decode(&server); err != nil {
 		return ServerData{}, err
 	}
 
@@ -106,60 +116,54 @@ func GetServerEntry(name string) (ServerData, error) {
 }
 
 // AddServerEntry - Add Server Entry
-func AddServerEntry(data ServerData) error {
-	session := session.Copy()
-	defer session.Close()
-	coll := session.DB("nebula").C("servers")
+func (m *Mongo) AddServerEntry(data ServerData) error {
+	ctx, cancel := getContext()
+	defer cancel()
+	coll := m.client.Database(m.database).Collection("servers")
 
-	if i, _ := coll.Find(bson.M{"name": data.Name}).Count(); i != 0 {
+	if cnt, err := coll.CountDocuments(ctx, bson.M{"name": data.Name}); cnt != 0 {
 		return errors.New("already exists")
+	} else if err != nil {
+		return err
 	}
 
-	//err := coll.Insert(, data, bson.M{"status": &StatusData{}})
-
-	err := coll.Insert(data)
-	//_, err := coll.Upsert(bson.M{"name": data.Name}, bson.M{"status": &StatusData{}})
-	if err != nil {
-		logrus.WithError(err).Errorf("[Server] Failed AddServerEntry: %s", err)
+	if _, err := coll.InsertOne(ctx, data); err != nil {
+		logrus.WithError(err).Errorf("[Server] Failed AddServerEntry")
+		return err
 	}
 
-	return err
+	return nil
 }
 
 // RemoveServerEntry - RemoveServerEntry
-func RemoveServerEntry(name string) error {
-	session := session.Copy()
-	defer session.Close()
-	coll := session.DB("nebula").C("servers")
+func (m *Mongo) RemoveServerEntry(name string) error {
+	ctx, cancel := getContext()
+	defer cancel()
+	coll := m.client.Database(m.database).Collection("servers")
 
-	err := coll.Remove(bson.M{"name": name})
+	_, err := coll.DeleteOne(ctx, bson.M{"name": name})
 	if err != nil {
-		logrus.WithError(err).Errorf("[Server] Failed RemoveServerEntry: %s", err)
+		logrus.WithError(err).Errorf("[Server] Failed RemoveServerEntry")
+		return err
 	}
 
-	return err
+	return nil
 }
 
 // PushServerStatus - Push Server Status
-func PushServerStatus(name string, response PingResponse) (string, int, error) {
-	session := session.Copy()
-	defer session.Close()
-	coll := session.DB("nebula").C("servers")
+func (m *Mongo) PushServerStatus(name string, response PingResponse) (string, int, error) {
+	ctx, cancel := getContext()
+	defer cancel()
+	coll := m.client.Database(m.database).Collection("servers")
 
-	v, err := coll.Find(bson.M{"name": name}).Count()
-
-	// not found or nil
-	if v == 0 || err != nil {
+	if cnt, err := coll.CountDocuments(ctx, bson.M{"name": name}); cnt == 0 || err != nil {
 		return "", 0, err
 	}
 
 	updated := 0
-	info, err := coll.Upsert(bson.M{"name": name}, bson.M{"$set": bson.M{"status": response}})
-	if err == nil {
-		updated = info.Updated
-	}
-
-	if updated > 0 {
+	r, err := coll.UpdateOne(ctx, bson.M{"name": name}, bson.M{"$set": bson.M{"status": response}}, options.Update().SetUpsert(true))
+	if err == nil && r.ModifiedCount >= 1 {
+		updated = int(r.ModifiedCount)
 		logrus.Debugf("[Fetcher] Updated : %s [%d]", name, updated)
 	}
 
@@ -167,20 +171,17 @@ func PushServerStatus(name string, response PingResponse) (string, int, error) {
 }
 
 // SetLockdown - Set server Lockdown
-func SetLockdown(name string, enabled bool, description string) error {
-	session := session.Copy()
-	defer session.Close()
-	coll := session.DB("nebula").C("servers")
-
-	if v, err := coll.Find(bson.M{"name": name}).Count(); v == 0 || err != nil {
-		return err
-	}
+func (m *Mongo) SetLockdown(name string, enabled bool, description string) error {
+	ctx, cancel := getContext()
+	defer cancel()
+	coll := m.client.Database(m.database).Collection("servers")
 
 	lockdown := &Lockdown{
 		Enabled:     enabled,
 		Description: description,
 	}
 
-	_, err := coll.Upsert(bson.M{"name": name}, bson.M{"$set": bson.M{"lockdown": lockdown}})
+	_, err := coll.UpdateOne(ctx, bson.M{"name": name}, bson.M{"$set": bson.M{"lockdown": lockdown}}, options.Update().SetUpsert(true))
+
 	return err
 }

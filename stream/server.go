@@ -18,7 +18,7 @@ func PublishServer(data *nebulapb.ServerEntry) {
 		Entry: data,
 	}
 	serialized, _ := json.Marshal(&d)
-	logrus.Debugln(d)
+	//logrus.Debugln(d)
 
 	_, err := c.Do("PUBLISH", "nebula.servers.global", string(serialized))
 	if err != nil {
@@ -36,7 +36,7 @@ func PublishRemoveServer(data *nebulapb.ServerEntry) {
 		Entry: data,
 	}
 	serialized, _ := json.Marshal(&d)
-	logrus.Debugln(data)
+	//logrus.Debugln(data)
 	_, err := c.Do("PUBLISH", "nebula.servers.global", string(serialized))
 	if err != nil {
 		logrus.WithError(err).Errorf("[Publish] Failed Remove Server")

@@ -26,15 +26,18 @@ type Server interface {
 type grpcServer struct {
 	server Server
 	mu     sync.RWMutex
+	mongo  *database.Mongo
 }
 
-func NewServer() *grpcServer {
-	return &grpcServer{}
+func NewServer(mongo *database.Mongo) *grpcServer {
+	return &grpcServer{
+		mongo: mongo,
+	}
 }
 
-func NewGRPCServer() *grpc.Server {
+func NewGRPCServer(mongo *database.Mongo) *grpc.Server {
 	server := grpc.NewServer()
-	newServer := NewServer()
+	newServer := NewServer(mongo)
 	pb.RegisterNebulaServer(server, newServer)
 
 	// Pinging
@@ -60,7 +63,7 @@ func (s *grpcServer) GetServerEntry(ctx context.Context, e *pb.GetServerEntryReq
 
 	var rpcServerEntry []*pb.ServerEntry
 
-	db, err := database.GetAllServerEntry()
+	db, err := s.mongo.GetAllServerEntry()
 	if err != nil {
 		logrus.WithError(err).Errorf("[gRPC] Error @ GetAllServerEntry: %s", err)
 		return nil, err
@@ -77,7 +80,7 @@ func (s *grpcServer) AddServerEntry(ctx context.Context, e *pb.AddServerEntryReq
 	defer s.mu.Unlock()
 
 	dbEntry := s.ServerEntry_PBtoDB(e.Entry)
-	err := database.AddServerEntry(dbEntry)
+	err := s.mongo.AddServerEntry(dbEntry)
 
 	stream.PublishServer(e.Entry)
 
@@ -88,7 +91,7 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	err := database.RemoveServerEntry(e.Name)
+	err := s.mongo.RemoveServerEntry(e.Name)
 
 	if err == nil {
 		stream.PublishRemoveServer(&pb.ServerEntry{Name: e.Name})
@@ -97,20 +100,20 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 }
 
 func (s *grpcServer) GetBungeeEntry(ctx context.Context, e *pb.GetBungeeEntryRequest) (*pb.GetBungeeEntryResponse, error) {
-	entry, err := database.GetBungeeEntry()
+	entry, err := s.mongo.GetBungeeEntry()
 	return &pb.GetBungeeEntryResponse{Entry: s.BungeeEntry_DBtoPB(entry)}, err
 }
 
 func (s *grpcServer) SetMotd(ctx context.Context, e *pb.SetMotdRequest) (*pb.SetMotdResponse, error) {
-	err := database.SetMotd(e.Motd)
-	entry, err := database.GetBungeeEntry()
+	err := s.mongo.SetMotd(e.Motd)
+	entry, err := s.mongo.GetBungeeEntry()
 	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
 	return &pb.SetMotdResponse{}, err
 }
 
 func (s *grpcServer) SetFavicon(ctx context.Context, e *pb.SetFaviconRequest) (*pb.SetFaviconResponse, error) {
-	err := database.SetFavicon(e.Favicon)
-	entry, err := database.GetBungeeEntry()
+	err := s.mongo.SetFavicon(e.Favicon)
+	entry, err := s.mongo.GetBungeeEntry()
 	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
 	return &pb.SetFaviconResponse{}, err
 }
@@ -120,11 +123,11 @@ func (s *grpcServer) SetLockdown(ctx context.Context, e *pb.SetLockdownRequest) 
 		e.Lockdown.Description = "&cThis server currently not available"
 	}
 
-	if err := database.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
+	if err := s.mongo.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
 		return &pb.SetLockdownResponse{}, err
 	}
 
-	entry, err := database.GetServerEntry(e.Name)
+	entry, err := s.mongo.GetServerEntry(e.Name)
 	if err == nil {
 		stream.PublishServer(s.ServerEntry_DBtoPB(entry))
 	}
