@@ -25,29 +25,29 @@ func NewMongoClient(mongoConStr, database string) *Mongo {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	err = client.Connect(ctx)
-	if err != nil {
-		logrus.WithError(err).WithField("connection", mongoConStr).Fatalf("[MongoDB] Failed connect to MongoDB")
-		return nil
-	}
-	err = client.Ping(context.Background(), readpref.Primary())
-	if err != nil {
-		logrus.WithError(err).WithField("connection", mongoConStr).Fatalf("[MongoDB] Failed ping to MongoDB")
-		return nil
-	}
-
-	logrus.Infof("[MongoDB] Connected to MongoDB")
-
-	return &Mongo{
+	m := &Mongo{
 		client:   client,
 		database: database,
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	if err := client.Connect(ctx); err != nil {
+		logrus.WithError(err).WithField("connection", mongoConStr).Fatalf("[MongoDB] Failed connect to MongoDB")
+		return m
+	}
+
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		logrus.WithError(err).WithField("connection", mongoConStr).Errorf("[MongoDB] Failed ping to MongoDB")
+		return m
+	}
+
+	logrus.Infof("[MongoDB] Connected to MongoDB")
+	return m
 }
 
 func getContext() (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	return ctx, cancel
 }

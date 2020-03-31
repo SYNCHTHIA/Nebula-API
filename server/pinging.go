@@ -27,14 +27,15 @@ func (s *grpcServer) pinging() {
 					//logrus.Debugf("%s is offline", data.Name)
 					data.Status = database.PingResponse{}
 				}
-				_, updated, pushErr := s.mongo.PushServerStatus(data.Name, data.Status)
+				_, _, pushErr := s.mongo.PushServerStatus(data.Name, data.Status)
 				//s.mu.Unlock()
 				if pushErr != nil {
 					return
 				}
-				if updated >= 1 {
-					stream.PublishServer(s.ServerEntry_DBtoPB(data))
-				}
+
+				// TODO: Currently, stream status anyway. (due to mongodb recovering.)
+				// Needed: MongoDB recover detection & Automatic publish to redis.
+				stream.PublishServer(s.ServerEntry_DBtoPB(data))
 			}(v)
 		}
 	}
