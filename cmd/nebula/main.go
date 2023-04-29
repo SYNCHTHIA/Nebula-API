@@ -11,12 +11,12 @@ import (
 	"github.com/synchthia/nebula-api/stream"
 )
 
-func startGRPC(port string, mongo *database.Mongo) error {
+func startGRPC(port string, mysql *database.Mysql) error {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		return err
 	}
-	return server.NewGRPCServer(mongo).Serve(lis)
+	return server.NewGRPCServer(mysql).Serve(lis)
 }
 
 func main() {
@@ -35,13 +35,12 @@ func main() {
 		stream.NewRedisPool(redisAddr)
 	}()
 
-	// Connect to MongoDB
-	mongoConStr := os.Getenv("MONGO_CONNECTION_STRING")
-	if len(mongoConStr) == 0 {
-		mongoConStr = "mongodb://localhost:27017"
+	// Connect to MySQL
+	mysqlConStr := os.Getenv("MYSQL_CONNECTION_STRING")
+	if len(mysqlConStr) == 0 {
+		mysqlConStr = "root:docker@tcp(localhost:3306)/nebula?charset=utf8mb4&parseTime=True&loc=Local"
 	}
-
-	mongoClient := database.NewMongoClient(mongoConStr, "nebula")
+	mysqlClient := database.NewMysqlClient(mysqlConStr, "nebula")
 
 	// gRPC
 	wait := make(chan struct{})
@@ -55,7 +54,7 @@ func main() {
 		msg := logrus.WithField("listen", port)
 		msg.Infof("[GRPC] Listening %s", port)
 
-		if err := startGRPC(port, mongoClient); err != nil {
+		if err := startGRPC(port, mysqlClient); err != nil {
 			logrus.Fatalf("[GRPC] gRPC Error: %s", err)
 		}
 	}()
