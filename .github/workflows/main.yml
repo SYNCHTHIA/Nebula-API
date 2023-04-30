@@ -3,35 +3,46 @@ on:
   push:
     branches:
       - master
+
+env:
+  IMAGE_NAME: "nebula-api"
+
 jobs:
   maven:
     name: deploy-maven
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Pull maven
-        uses: docker://maven:3.6.0-jdk-8-slim
+        uses: docker://maven:3.9.1-eclipse-temurin-17
         with:
           entrypoint: /bin/bash
       - name: Build and Deploy
         env:
-          CI_MVN_SETTINGS: ${{ secrets.CI_MVN_SETTINGS }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p $HOME/.m2
-          echo -e "$(echo $CI_MVN_SETTINGS)" > "$HOME/.m2/settings.xml"
           bash ./nebulapb/make-java.sh deploy
 
   build:
-    name: build-docker
+    name: build
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
     steps:
-      - uses: actions/checkout@v2
-      - name: Login to Google Container Registry
-        env:
-          GCP_SERVICE_ACCOUNT: ${{ secrets.STARTAIL_GCP_SERVICE_ACCOUNT }}
-        run: docker login -u _json_key -p "$(echo $GCP_SERVICE_ACCOUNT)" gcr.io
-      - name: Build Image
-        run: docker build . -t gcr.io/startail-io/nebula-api:latest
-      - name: Push Image
-        run: docker push gcr.io/startail-io/nebula-api:latest
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Build and push"
+        uses: docker/build-push-action@v2
+        with:
+          context: "."
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
