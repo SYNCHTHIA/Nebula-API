@@ -14,8 +14,8 @@ type Servers struct {
 	Port        int32
 	Motd        string
 	Fallback    bool
-	Lockdown    string
-	Status      string
+	Lockdown    string `gorm:"type:json;"`
+	Status      string `gorm:"type:json;"`
 }
 
 type Bungee struct {

@@ -99,7 +99,7 @@ func (s *Mysql) AddServerEntry(data Servers) error {
 		Motd:        data.Motd,
 		Fallback:    data.Fallback,
 		Lockdown:    data.Lockdown,
-		Status:      data.Status,
+		Status:      "{}",
 	})
 
 	if result.Error != nil {
