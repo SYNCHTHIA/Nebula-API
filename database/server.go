@@ -4,33 +4,28 @@ import (
 	"errors"
 
 	"github.com/sirupsen/logrus"
-	"github.com/synchthia/nebula-api/nebulapb"
 )
+
+// Servers - Server definition
+type Servers struct {
+	Id          int32  `gorm:"primaryKey;AutoIncrement;"`
+	Name        string `gorm:"index;not null;"`
+	DisplayName string
+	Address     string
+	Port        int32
+	Motd        string
+	Fallback    bool
+	//Lockdown    *Lockdown `gorm:"references:Lockdown"`
+	Lockdown string `gorm:"type:json;"`
+	Status   string `gorm:"type:json;"`
+}
 
 // Lockdown - Server lockdown entry
 type Lockdown struct {
-	Enabled     bool   `bson:"enabled"`
-	Description string `bson:"description,omitempty"`
-}
-
-func LockdownFromProtobuf(pb *nebulapb.Lockdown) Lockdown {
-	if pb == nil {
-		return Lockdown{
-			Enabled: false,
-		}
-	}
-
-	return Lockdown{
-		Enabled:     pb.Enabled,
-		Description: pb.Description,
-	}
-}
-
-func (l *Lockdown) ToProtobuf() *nebulapb.Lockdown {
-	return &nebulapb.Lockdown{
-		Enabled:     l.Enabled,
-		Description: l.Description,
-	}
+	Id          uint
+	ServersId   int32
+	Enabled     bool
+	Description string
 }
 
 type PingResponse struct {

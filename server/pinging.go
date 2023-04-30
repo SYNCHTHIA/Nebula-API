@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"unsafe"
 
 	"github.com/sirupsen/logrus"
 	"github.com/synchthia/nebula-api/database"
@@ -25,11 +24,11 @@ func (s *grpcServer) pinging() {
 				if r != nil && pingErr == nil {
 					//logrus.Debugf("%s %d: %v", data.Name, data.Port, r)
 					statusJson, _ := json.Marshal(*r)
-					data.Status = *(*string)(unsafe.Pointer(&statusJson))
+					data.Status = string(statusJson)
 				} else {
 					//logrus.Debugf("%s is offline", data.Name)
 					statusJson, _ := json.Marshal(database.PingResponse{})
-					data.Status = *(*string)(unsafe.Pointer(&statusJson))
+					data.Status = string(statusJson)
 				}
 				_, _, pushErr := s.mysql.PushServerStatus(data.Name, data.Status)
 				//s.mu.Unlock()

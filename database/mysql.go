@@ -2,27 +2,10 @@ package database
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/synchthia/nebula-api/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
-
-type Servers struct {
-	Id          int32  `gorm:"primaryKey;AutoIncrement;"`
-	Name        string `gorm:"index;not null;"`
-	DisplayName string
-	Address     string
-	Port        int32
-	Motd        string
-	Fallback    bool
-	Lockdown    string `gorm:"type:json;"`
-	Status      string `gorm:"type:json;"`
-}
-
-type Bungee struct {
-	Id      int32 `gorm:"primaryKey;AutoIncrement;"`
-	Motd    string
-	Favicon string
-}
 
 type Mysql struct {
 	client   *gorm.DB
@@ -39,7 +22,9 @@ func NewMysqlClient(mysqlConStr, database string) *Mysql {
 		DontSupportRenameIndex:    true,
 		DontSupportRenameColumn:   true,
 		SkipInitializeWithVersion: false,
-	}), &gorm.Config{})
+	}), &gorm.Config{
+		Logger: logger.NewGorm(),
+	})
 	if err != nil {
 		logrus.Fatalf("[MySQL] Failed to connect to MySQL: %s", err)
 		return nil
@@ -52,12 +37,16 @@ func NewMysqlClient(mysqlConStr, database string) *Mysql {
 
 	if err := m.client.AutoMigrate(&Servers{}); err != nil {
 		logrus.Fatalf("[MySQL] Failed to migrate: %s", err)
-		return m
+		return nil
 	}
 
 	if err := m.client.AutoMigrate(&Bungee{}); err != nil {
 		logrus.Fatalf("[MySQL] Failed to migrate: %s", err)
-		return m
+		return nil
+	}
+
+	if err := m.InitBungeeTable(); err != nil {
+		return nil
 	}
 
 	logrus.Infof("[MySQL] Connected to MySQL")

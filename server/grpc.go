@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"sync"
-	"unsafe"
 
 	"golang.org/x/net/context"
 
@@ -151,6 +150,26 @@ func (s *grpcServer) BungeeEntry_PBtoDB(pbEntry *pb.BungeeEntry) database.Bungee
 	}
 }
 
+func (s *grpcServer) Lockdown_DBtoPB(dbEntry database.Lockdown) *pb.Lockdown {
+	return &pb.Lockdown{
+		Enabled:     dbEntry.Enabled,
+		Description: dbEntry.Description,
+	}
+}
+
+func (s *grpcServer) Lockdown_PBtoDB(pbEntry *pb.Lockdown) *database.Lockdown {
+	if pbEntry == nil {
+		return &database.Lockdown{
+			Enabled: false,
+		}
+	}
+
+	return &database.Lockdown{
+		Enabled:     pbEntry.Enabled,
+		Description: pbEntry.Description,
+	}
+}
+
 func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStatus {
 	return &pb.ServerStatus{
 		Online: dbEntry.Online,
@@ -168,8 +187,9 @@ func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStat
 }
 
 func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.Servers) *pb.ServerEntry {
-	lockDown := database.Lockdown{}
-	json.Unmarshal([]byte(dbEntry.Lockdown), &lockDown)
+	lockdown := database.Lockdown{}
+	json.Unmarshal([]byte(dbEntry.Lockdown), &lockdown)
+
 	status := database.PingResponse{}
 	json.Unmarshal([]byte(dbEntry.Status), &status)
 
@@ -180,13 +200,13 @@ func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.Servers) *pb.ServerEntr
 		Port:        dbEntry.Port,
 		Motd:        dbEntry.Motd,
 		Fallback:    dbEntry.Fallback,
-		Lockdown:    lockDown.ToProtobuf(),
+		Lockdown:    s.Lockdown_DBtoPB(lockdown),
 		Status:      s.Status_DBtoPB(status),
 	}
 }
 
 func (s *grpcServer) ServerEntry_PBtoDB(pbEntry *pb.ServerEntry) database.Servers {
-	lockdownJson, _ := json.Marshal(database.LockdownFromProtobuf(pbEntry.Lockdown))
+	r, _ := json.Marshal(s.Lockdown_PBtoDB(pbEntry.Lockdown))
 
 	return database.Servers{
 		Name:        pbEntry.Name,
@@ -195,6 +215,6 @@ func (s *grpcServer) ServerEntry_PBtoDB(pbEntry *pb.ServerEntry) database.Server
 		Port:        pbEntry.Port,
 		Motd:        pbEntry.Motd,
 		Fallback:    pbEntry.Fallback,
-		Lockdown:    *(*string)(unsafe.Pointer(&lockdownJson)),
+		Lockdown:    string(r),
 	}
 }
