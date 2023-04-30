@@ -5,24 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/synchthia/nebula-api/nebulapb"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// ServerData - Server List Data
-type ServerData struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	Name        string             `json:"name" bson:"name"`
-	DisplayName string             `json:"display_name" bson:"display_name"`
-	Address     string             `json:"address" bson:"address"`
-	Port        int32              `json:"port" bson:"port"`
-	Motd        string             `json:"motd" bson:"motd"`
-	Fallback    bool               `bson:"fallback"`
-	Lockdown    Lockdown           `bson:"lockdown"`
-	Status      PingResponse       `bson:"status"`
-	//Status      StatusData    `json:"status" bson:"status"`
-}
 
 // Lockdown - Server lockdown entry
 type Lockdown struct {
@@ -76,112 +59,85 @@ type PlayersData struct {
 }*/
 
 // GetAllServerEntry - Get All Server Entries
-func (m *Mongo) GetAllServerEntry() ([]ServerData, error) {
-	ctx, cancel := getContext()
-	defer cancel()
-	coll := m.client.Database(m.database).Collection("servers")
-
-	var servers []ServerData
-
-	r, err := coll.Find(ctx, bson.M{})
-	if err != nil {
-		logrus.WithError(err).Errorf("[Server] Failed Find ServerEntry")
-		return nil, err
-	}
-
-	if err := r.All(ctx, &servers); err != nil {
-		return nil, err
+func (s *Mysql) GetAllServerEntry() ([]Servers, error) {
+	var servers []Servers
+	r := s.client.Find(&servers)
+	if r.Error != nil {
+		logrus.WithError(r.Error).Errorf("[Server] Failed Find ServerEntry")
+		return nil, r.Error
 	}
 
 	return servers, nil
 }
 
 // GetServerEntry - Get Individual Server Entry
-func (m *Mongo) GetServerEntry(name string) (ServerData, error) {
-	ctx, cancel := getContext()
-	defer cancel()
-	coll := m.client.Database(m.database).Collection("servers")
-
-	server := ServerData{}
-	r := coll.FindOne(ctx, bson.M{"name": name})
-	if r.Err() != nil {
-		return ServerData{}, r.Err()
-	}
-
-	if err := r.Decode(&server); err != nil {
-		return ServerData{}, err
+func (s *Mysql) GetServerEntry(name string) (Servers, error) {
+	server := Servers{}
+	r := s.client.Find(&server, "name = ?", name)
+	if r.Error != nil {
+		return Servers{}, r.Error
 	}
 
 	return server, nil
 }
 
 // AddServerEntry - Add Server Entry
-func (m *Mongo) AddServerEntry(data ServerData) error {
-	ctx, cancel := getContext()
-	defer cancel()
-	coll := m.client.Database(m.database).Collection("servers")
+func (s *Mysql) AddServerEntry(data Servers) error {
+	r := s.client.First(&Servers{}, "name = ?", data.Name)
 
-	if cnt, err := coll.CountDocuments(ctx, bson.M{"name": data.Name}); cnt != 0 {
+	if r.RowsAffected != 0 {
 		return errors.New("already exists")
-	} else if err != nil {
-		return err
+	} else if r.Error != nil && r.RowsAffected != 0 {
+		return r.Error
 	}
 
-	if _, err := coll.InsertOne(ctx, data); err != nil {
-		logrus.WithError(err).Errorf("[Server] Failed AddServerEntry")
-		return err
+	result := s.client.Create(&Servers{
+		Name:        data.Name,
+		DisplayName: data.DisplayName,
+		Address:     data.Address,
+		Port:        data.Port,
+		Motd:        data.Motd,
+		Fallback:    data.Fallback,
+		Lockdown:    data.Lockdown,
+		Status:      "{}",
+	})
+
+	if result.Error != nil {
+		logrus.WithError(result.Error).Errorf("[Server] Failed AddServerEntry")
+		return result.Error
 	}
 
 	return nil
 }
 
 // RemoveServerEntry - RemoveServerEntry
-func (m *Mongo) RemoveServerEntry(name string) error {
-	ctx, cancel := getContext()
-	defer cancel()
-	coll := m.client.Database(m.database).Collection("servers")
-
-	_, err := coll.DeleteOne(ctx, bson.M{"name": name})
-	if err != nil {
-		logrus.WithError(err).Errorf("[Server] Failed RemoveServerEntry")
-		return err
+func (s *Mysql) RemoveServerEntry(name string) error {
+	r := s.client.Delete(&Servers{}, "name = ?", name)
+	if r.Error != nil {
+		logrus.WithError(r.Error).Errorf("[Server] Failed RemoveServerEntry")
+		return r.Error
 	}
 
 	return nil
 }
 
 // PushServerStatus - Push Server Status
-func (m *Mongo) PushServerStatus(name string, response PingResponse) (string, int, error) {
-	ctx, cancel := getContext()
-	defer cancel()
-	coll := m.client.Database(m.database).Collection("servers")
+func (s *Mysql) PushServerStatus(name, response string) (string, int, error) {
+	r := s.client.Model(&Servers{}).Where("name = ?", name).Update("status", response)
 
-	if cnt, err := coll.CountDocuments(ctx, bson.M{"name": name}); cnt == 0 || err != nil {
-		return "", 0, err
+	if r.Error != nil {
+		return "", 0, r.Error
 	}
 
-	updated := 0
-	r, err := coll.UpdateOne(ctx, bson.M{"name": name}, bson.M{"$set": bson.M{"status": response}}, options.Update().SetUpsert(true))
-	if err == nil && r.ModifiedCount >= 1 {
-		updated = int(r.ModifiedCount)
-		logrus.Debugf("[Fetcher] Updated : %s [%d]", name, updated)
-	}
-
-	return name, updated, err
+	return name, 0, r.Error
 }
 
 // SetLockdown - Set server Lockdown
-func (m *Mongo) SetLockdown(name string, enabled bool, description string) error {
-	ctx, cancel := getContext()
-	defer cancel()
-	coll := m.client.Database(m.database).Collection("servers")
-
-	lockdown := &Lockdown{
+func (s *Mysql) SetLockdown(name string, enabled bool, description string) error {
+	r := s.client.Model(&Servers{}).Where("name = ?", name).Update("lockdown", Lockdown{
 		Enabled:     enabled,
 		Description: description,
-	}
+	})
 
-	_, err := coll.UpdateOne(ctx, bson.M{"name": name}, bson.M{"$set": bson.M{"lockdown": lockdown}}, options.Update().SetUpsert(true))
-
-	return err
+	return r.Error
 }

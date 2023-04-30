@@ -1,7 +1,9 @@
 package server
 
 import (
+	"encoding/json"
 	"sync"
+	"unsafe"
 
 	"golang.org/x/net/context"
 
@@ -26,18 +28,18 @@ type Server interface {
 type grpcServer struct {
 	server Server
 	mu     sync.RWMutex
-	mongo  *database.Mongo
+	mysql  *database.Mysql
 }
 
-func NewServer(mongo *database.Mongo) *grpcServer {
+func NewServer(mysql *database.Mysql) *grpcServer {
 	return &grpcServer{
-		mongo: mongo,
+		mysql: mysql,
 	}
 }
 
-func NewGRPCServer(mongo *database.Mongo) *grpc.Server {
+func NewGRPCServer(mysql *database.Mysql) *grpc.Server {
 	server := grpc.NewServer()
-	newServer := NewServer(mongo)
+	newServer := NewServer(mysql)
 	pb.RegisterNebulaServer(server, newServer)
 
 	// Pinging
@@ -63,7 +65,7 @@ func (s *grpcServer) GetServerEntry(ctx context.Context, e *pb.GetServerEntryReq
 
 	var rpcServerEntry []*pb.ServerEntry
 
-	db, err := s.mongo.GetAllServerEntry()
+	db, err := s.mysql.GetAllServerEntry()
 	if err != nil {
 		logrus.WithError(err).Errorf("[gRPC] Error @ GetAllServerEntry: %s", err)
 		return nil, err
@@ -80,7 +82,7 @@ func (s *grpcServer) AddServerEntry(ctx context.Context, e *pb.AddServerEntryReq
 	defer s.mu.Unlock()
 
 	dbEntry := s.ServerEntry_PBtoDB(e.Entry)
-	err := s.mongo.AddServerEntry(dbEntry)
+	err := s.mysql.AddServerEntry(dbEntry)
 
 	stream.PublishServer(e.Entry)
 
@@ -91,7 +93,7 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	err := s.mongo.RemoveServerEntry(e.Name)
+	err := s.mysql.RemoveServerEntry(e.Name)
 
 	if err == nil {
 		stream.PublishRemoveServer(&pb.ServerEntry{Name: e.Name})
@@ -100,20 +102,20 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 }
 
 func (s *grpcServer) GetBungeeEntry(ctx context.Context, e *pb.GetBungeeEntryRequest) (*pb.GetBungeeEntryResponse, error) {
-	entry, err := s.mongo.GetBungeeEntry()
+	entry, err := s.mysql.GetBungeeEntry()
 	return &pb.GetBungeeEntryResponse{Entry: s.BungeeEntry_DBtoPB(entry)}, err
 }
 
 func (s *grpcServer) SetMotd(ctx context.Context, e *pb.SetMotdRequest) (*pb.SetMotdResponse, error) {
-	err := s.mongo.SetMotd(e.Motd)
-	entry, err := s.mongo.GetBungeeEntry()
+	err := s.mysql.SetMotd(e.Motd)
+	entry, err := s.mysql.GetBungeeEntry()
 	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
 	return &pb.SetMotdResponse{}, err
 }
 
 func (s *grpcServer) SetFavicon(ctx context.Context, e *pb.SetFaviconRequest) (*pb.SetFaviconResponse, error) {
-	err := s.mongo.SetFavicon(e.Favicon)
-	entry, err := s.mongo.GetBungeeEntry()
+	err := s.mysql.SetFavicon(e.Favicon)
+	entry, err := s.mysql.GetBungeeEntry()
 	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
 	return &pb.SetFaviconResponse{}, err
 }
@@ -123,11 +125,11 @@ func (s *grpcServer) SetLockdown(ctx context.Context, e *pb.SetLockdownRequest) 
 		e.Lockdown.Description = "&cThis server currently not available"
 	}
 
-	if err := s.mongo.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
+	if err := s.mysql.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
 		return &pb.SetLockdownResponse{}, err
 	}
 
-	entry, err := s.mongo.GetServerEntry(e.Name)
+	entry, err := s.mysql.GetServerEntry(e.Name)
 	if err == nil {
 		stream.PublishServer(s.ServerEntry_DBtoPB(entry))
 	}
@@ -135,15 +137,15 @@ func (s *grpcServer) SetLockdown(ctx context.Context, e *pb.SetLockdownRequest) 
 	return &pb.SetLockdownResponse{Entry: s.ServerEntry_DBtoPB(entry)}, err
 }
 
-func (s *grpcServer) BungeeEntry_DBtoPB(dbEntry database.BungeeData) *pb.BungeeEntry {
+func (s *grpcServer) BungeeEntry_DBtoPB(dbEntry database.Bungee) *pb.BungeeEntry {
 	return &pb.BungeeEntry{
 		Motd:    dbEntry.Motd,
 		Favicon: dbEntry.Favicon,
 	}
 }
 
-func (s *grpcServer) BungeeEntry_PBtoDB(pbEntry *pb.BungeeEntry) database.BungeeData {
-	return database.BungeeData{
+func (s *grpcServer) BungeeEntry_PBtoDB(pbEntry *pb.BungeeEntry) database.Bungee {
+	return database.Bungee{
 		Motd:    pbEntry.Motd,
 		Favicon: pbEntry.Favicon,
 	}
@@ -165,7 +167,12 @@ func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStat
 	}
 }
 
-func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.ServerData) *pb.ServerEntry {
+func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.Servers) *pb.ServerEntry {
+	lockDown := database.Lockdown{}
+	json.Unmarshal([]byte(dbEntry.Lockdown), &lockDown)
+	status := database.PingResponse{}
+	json.Unmarshal([]byte(dbEntry.Status), &status)
+
 	return &pb.ServerEntry{
 		Name:        dbEntry.Name,
 		DisplayName: dbEntry.DisplayName,
@@ -173,19 +180,21 @@ func (s *grpcServer) ServerEntry_DBtoPB(dbEntry database.ServerData) *pb.ServerE
 		Port:        dbEntry.Port,
 		Motd:        dbEntry.Motd,
 		Fallback:    dbEntry.Fallback,
-		Lockdown:    dbEntry.Lockdown.ToProtobuf(),
-		Status:      s.Status_DBtoPB(dbEntry.Status),
+		Lockdown:    lockDown.ToProtobuf(),
+		Status:      s.Status_DBtoPB(status),
 	}
 }
 
-func (s *grpcServer) ServerEntry_PBtoDB(pbEntry *pb.ServerEntry) database.ServerData {
-	return database.ServerData{
+func (s *grpcServer) ServerEntry_PBtoDB(pbEntry *pb.ServerEntry) database.Servers {
+	lockdownJson, _ := json.Marshal(database.LockdownFromProtobuf(pbEntry.Lockdown))
+
+	return database.Servers{
 		Name:        pbEntry.Name,
 		DisplayName: pbEntry.DisplayName,
 		Address:     pbEntry.Address,
 		Port:        pbEntry.Port,
 		Motd:        pbEntry.Motd,
 		Fallback:    pbEntry.Fallback,
-		Lockdown:    database.LockdownFromProtobuf(pbEntry.Lockdown),
+		Lockdown:    *(*string)(unsafe.Pointer(&lockdownJson)),
 	}
 }
