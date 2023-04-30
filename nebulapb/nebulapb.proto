@@ -1,7 +1,8 @@
 syntax = "proto3";
 package nebulapb;
 
-option java_package = "net.synchthia.api.nebula";
+option go_package = "./nebulapb";
+option java_package = "net.synchthia.nebula.api";
 option java_outer_classname = "NebulaProtos";
 
 service Nebula {
