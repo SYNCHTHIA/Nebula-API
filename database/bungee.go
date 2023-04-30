@@ -3,7 +3,7 @@ package database
 type Bungee struct {
 	Id      string `gorm:"primaryKey;"`
 	Motd    string
-	Favicon string `gorm:"size:1024"`
+	Favicon string `gorm:"size:4096"`
 }
 
 // InitBungeeTable - Initialize table (create default entry)
