@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gomodule/redigo v1.8.9
+	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect

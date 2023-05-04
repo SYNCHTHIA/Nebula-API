@@ -26,6 +26,9 @@ service Nebula {
 
     // API <- App
     rpc SetLockdown(SetLockdownRequest) returns (SetLockdownResponse) {}
+
+    // API <- Bungee / Server
+    rpc IPLookup(IPLookupRequest) returns (IPLookupResponse) {}
 }
 
 //--
@@ -124,4 +127,23 @@ message SetLockdownRequest {
 
 message SetLockdownResponse {
     ServerEntry entry = 1;
+}
+
+//
+// IP Lookup
+//
+message IPLookupResult {
+    string ipAddress = 1;
+    string isp = 2;
+    string usageType = 3;
+    bool isCrawler = 4;
+    bool isProxy = 5;
+}
+
+message IPLookupRequest {
+    string ipAddress = 1;
+}
+
+message IPLookupResponse {
+    IPLookupResult result = 1;
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net"
 	"os"
 
@@ -8,15 +9,16 @@ import (
 	"github.com/synchthia/nebula-api/database"
 	"github.com/synchthia/nebula-api/logger"
 	"github.com/synchthia/nebula-api/server"
+	"github.com/synchthia/nebula-api/service"
 	"github.com/synchthia/nebula-api/stream"
 )
 
-func startGRPC(port string, mysql *database.Mysql) error {
+func startGRPC(port string, svc *server.Services) error {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		return err
 	}
-	return server.NewGRPCServer(mysql).Serve(lis)
+	return server.NewGRPCServer(svc).Serve(lis)
 }
 
 func main() {
@@ -25,6 +27,26 @@ func main() {
 
 	// Init
 	logrus.Printf("[NEBULA] Starting Nebula Server...")
+
+	svc := &server.Services{}
+
+	// IP Filter
+	isIPFilter := os.Getenv("ENABLE_IP_FILTER")
+	if isIPFilter == "true" {
+		dbipToken := os.Getenv("DB_IP_TOKEN")
+		if len(dbipToken) == 0 {
+			logrus.Errorf("[IPFilter] IPFilter enabled, but DB_IP_TOKEN does not provided!!")
+			panic(errors.New("DB_IP_TOKEN is null"))
+		}
+
+		ipfw, err := service.NewIPFilter(&service.IPFilterConfig{
+			DBIPToken: dbipToken,
+		})
+		if err != nil {
+			panic(err)
+		}
+		svc.IPFilter = ipfw
+	}
 
 	// Redis
 	go func() {
@@ -41,6 +63,7 @@ func main() {
 		mysqlConStr = "root:docker@tcp(localhost:3306)/nebula?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 	mysqlClient := database.NewMysqlClient(mysqlConStr, "nebula")
+    svc.MySQL = mysqlClient
 
 	// gRPC
 	wait := make(chan struct{})
@@ -54,7 +77,7 @@ func main() {
 		msg := logrus.WithField("listen", port)
 		msg.Infof("[GRPC] Listening %s", port)
 
-		if err := startGRPC(port, mysqlClient); err != nil {
+		if err := startGRPC(port, svc); err != nil {
 			logrus.Fatalf("[GRPC] gRPC Error: %s", err)
 		}
 	}()

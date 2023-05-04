@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 
 	"golang.org/x/net/context"
@@ -11,9 +12,15 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/synchthia/nebula-api/database"
 	pb "github.com/synchthia/nebula-api/nebulapb"
+	"github.com/synchthia/nebula-api/service"
 	"github.com/synchthia/nebula-api/stream"
 	"google.golang.org/grpc"
 )
+
+type Services struct {
+	MySQL    *database.Mysql
+	IPFilter *service.IPFilter
+}
 
 type Server interface {
 	GetAllServerEntry()
@@ -27,18 +34,18 @@ type Server interface {
 type grpcServer struct {
 	server Server
 	mu     sync.RWMutex
-	mysql  *database.Mysql
+	svc    *Services
 }
 
-func NewServer(mysql *database.Mysql) *grpcServer {
+func NewServer(svc *Services) *grpcServer {
 	return &grpcServer{
-		mysql: mysql,
+		svc: svc,
 	}
 }
 
-func NewGRPCServer(mysql *database.Mysql) *grpc.Server {
+func NewGRPCServer(svc *Services) *grpc.Server {
 	server := grpc.NewServer()
-	newServer := NewServer(mysql)
+	newServer := NewServer(svc)
 	pb.RegisterNebulaServer(server, newServer)
 
 	// Pinging
@@ -64,7 +71,7 @@ func (s *grpcServer) GetServerEntry(ctx context.Context, e *pb.GetServerEntryReq
 
 	var rpcServerEntry []*pb.ServerEntry
 
-	db, err := s.mysql.GetAllServerEntry()
+	db, err := s.svc.MySQL.GetAllServerEntry()
 	if err != nil {
 		logrus.WithError(err).Errorf("[gRPC] Error @ GetAllServerEntry: %s", err)
 		return nil, err
@@ -81,7 +88,7 @@ func (s *grpcServer) AddServerEntry(ctx context.Context, e *pb.AddServerEntryReq
 	defer s.mu.Unlock()
 
 	dbEntry := s.ServerEntry_PBtoDB(e.Entry)
-	err := s.mysql.AddServerEntry(dbEntry)
+	err := s.svc.MySQL.AddServerEntry(dbEntry)
 
 	stream.PublishServer(e.Entry)
 
@@ -92,7 +99,7 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	err := s.mysql.RemoveServerEntry(e.Name)
+	err := s.svc.MySQL.RemoveServerEntry(e.Name)
 
 	if err == nil {
 		stream.PublishRemoveServer(&pb.ServerEntry{Name: e.Name})
@@ -101,20 +108,20 @@ func (s *grpcServer) RemoveServerEntry(ctx context.Context, e *pb.RemoveServerEn
 }
 
 func (s *grpcServer) GetBungeeEntry(ctx context.Context, e *pb.GetBungeeEntryRequest) (*pb.GetBungeeEntryResponse, error) {
-	entry, err := s.mysql.GetBungeeEntry()
+	entry, err := s.svc.MySQL.GetBungeeEntry()
 	return &pb.GetBungeeEntryResponse{Entry: s.BungeeEntry_DBtoPB(entry)}, err
 }
 
 func (s *grpcServer) SetMotd(ctx context.Context, e *pb.SetMotdRequest) (*pb.SetMotdResponse, error) {
-	err := s.mysql.SetMotd(e.Motd)
-	entry, err := s.mysql.GetBungeeEntry()
+	err := s.svc.MySQL.SetMotd(e.Motd)
+	entry, err := s.svc.MySQL.GetBungeeEntry()
 	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
 	return &pb.SetMotdResponse{}, err
 }
 
 func (s *grpcServer) SetFavicon(ctx context.Context, e *pb.SetFaviconRequest) (*pb.SetFaviconResponse, error) {
-	err := s.mysql.SetFavicon(e.Favicon)
-	entry, err := s.mysql.GetBungeeEntry()
+	err := s.svc.MySQL.SetFavicon(e.Favicon)
+	entry, err := s.svc.MySQL.GetBungeeEntry()
 	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
 	return &pb.SetFaviconResponse{}, err
 }
@@ -124,16 +131,37 @@ func (s *grpcServer) SetLockdown(ctx context.Context, e *pb.SetLockdownRequest) 
 		e.Lockdown.Description = "&cThis server currently not available"
 	}
 
-	if err := s.mysql.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
+	if err := s.svc.MySQL.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
 		return &pb.SetLockdownResponse{}, err
 	}
 
-	entry, err := s.mysql.GetServerEntry(e.Name)
+	entry, err := s.svc.MySQL.GetServerEntry(e.Name)
 	if err == nil {
 		stream.PublishServer(s.ServerEntry_DBtoPB(entry))
 	}
 
 	return &pb.SetLockdownResponse{Entry: s.ServerEntry_DBtoPB(entry)}, err
+}
+
+func (s *grpcServer) IPLookup(ctx context.Context, e *pb.IPLookupRequest) (*pb.IPLookupResponse, error) {
+	if s.svc.IPFilter != nil {
+		res, err := s.svc.IPFilter.Check(e.IpAddress)
+		if err != nil {
+			return &pb.IPLookupResponse{}, err
+		}
+
+		return &pb.IPLookupResponse{
+			Result: &pb.IPLookupResult{
+				IpAddress: res.IPAddress,
+				Isp:       res.Isp,
+				UsageType: res.UsageType,
+				IsProxy:   res.IsProxy,
+				IsCrawler: res.IsCrawler,
+			},
+		}, nil
+	} else {
+		return &pb.IPLookupResponse{}, errors.New("iplookup not enabled")
+	}
 }
 
 func (s *grpcServer) BungeeEntry_DBtoPB(dbEntry database.Bungee) *pb.BungeeEntry {

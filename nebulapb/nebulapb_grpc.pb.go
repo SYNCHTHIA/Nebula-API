@@ -36,6 +36,8 @@ type NebulaClient interface {
 	SetFavicon(ctx context.Context, in *SetFaviconRequest, opts ...grpc.CallOption) (*SetFaviconResponse, error)
 	// API <- App
 	SetLockdown(ctx context.Context, in *SetLockdownRequest, opts ...grpc.CallOption) (*SetLockdownResponse, error)
+	// API <- Bungee / Server
+	IPLookup(ctx context.Context, in *IPLookupRequest, opts ...grpc.CallOption) (*IPLookupResponse, error)
 }
 
 type nebulaClient struct {
@@ -109,6 +111,15 @@ func (c *nebulaClient) SetLockdown(ctx context.Context, in *SetLockdownRequest, 
 	return out, nil
 }
 
+func (c *nebulaClient) IPLookup(ctx context.Context, in *IPLookupRequest, opts ...grpc.CallOption) (*IPLookupResponse, error) {
+	out := new(IPLookupResponse)
+	err := c.cc.Invoke(ctx, "/nebulapb.Nebula/IPLookup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NebulaServer is the server API for Nebula service.
 // All implementations should embed UnimplementedNebulaServer
 // for forward compatibility
@@ -127,6 +138,8 @@ type NebulaServer interface {
 	SetFavicon(context.Context, *SetFaviconRequest) (*SetFaviconResponse, error)
 	// API <- App
 	SetLockdown(context.Context, *SetLockdownRequest) (*SetLockdownResponse, error)
+	// API <- Bungee / Server
+	IPLookup(context.Context, *IPLookupRequest) (*IPLookupResponse, error)
 }
 
 // UnimplementedNebulaServer should be embedded to have forward compatible implementations.
@@ -153,6 +166,9 @@ func (UnimplementedNebulaServer) SetFavicon(context.Context, *SetFaviconRequest)
 }
 func (UnimplementedNebulaServer) SetLockdown(context.Context, *SetLockdownRequest) (*SetLockdownResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetLockdown not implemented")
+}
+func (UnimplementedNebulaServer) IPLookup(context.Context, *IPLookupRequest) (*IPLookupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IPLookup not implemented")
 }
 
 // UnsafeNebulaServer may be embedded to opt out of forward compatibility for this service.
@@ -292,6 +308,24 @@ func _Nebula_SetLockdown_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Nebula_IPLookup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPLookupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NebulaServer).IPLookup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nebulapb.Nebula/IPLookup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NebulaServer).IPLookup(ctx, req.(*IPLookupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Nebula_ServiceDesc is the grpc.ServiceDesc for Nebula service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -326,6 +360,10 @@ var Nebula_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetLockdown",
 			Handler:    _Nebula_SetLockdown_Handler,
+		},
+		{
+			MethodName: "IPLookup",
+			Handler:    _Nebula_IPLookup_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

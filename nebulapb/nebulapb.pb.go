@@ -1129,6 +1129,180 @@ func (x *SetLockdownResponse) GetEntry() *ServerEntry {
 	return nil
 }
 
+// IP Lookup
+type IPLookupResult struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	IpAddress string `protobuf:"bytes,1,opt,name=ipAddress,proto3" json:"ipAddress,omitempty"`
+	Isp       string `protobuf:"bytes,2,opt,name=isp,proto3" json:"isp,omitempty"`
+	UsageType string `protobuf:"bytes,3,opt,name=usageType,proto3" json:"usageType,omitempty"`
+	IsCrawler bool   `protobuf:"varint,4,opt,name=isCrawler,proto3" json:"isCrawler,omitempty"`
+	IsProxy   bool   `protobuf:"varint,5,opt,name=isProxy,proto3" json:"isProxy,omitempty"`
+}
+
+func (x *IPLookupResult) Reset() {
+	*x = IPLookupResult{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nebulapb_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *IPLookupResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IPLookupResult) ProtoMessage() {}
+
+func (x *IPLookupResult) ProtoReflect() protoreflect.Message {
+	mi := &file_nebulapb_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IPLookupResult.ProtoReflect.Descriptor instead.
+func (*IPLookupResult) Descriptor() ([]byte, []int) {
+	return file_nebulapb_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *IPLookupResult) GetIpAddress() string {
+	if x != nil {
+		return x.IpAddress
+	}
+	return ""
+}
+
+func (x *IPLookupResult) GetIsp() string {
+	if x != nil {
+		return x.Isp
+	}
+	return ""
+}
+
+func (x *IPLookupResult) GetUsageType() string {
+	if x != nil {
+		return x.UsageType
+	}
+	return ""
+}
+
+func (x *IPLookupResult) GetIsCrawler() bool {
+	if x != nil {
+		return x.IsCrawler
+	}
+	return false
+}
+
+func (x *IPLookupResult) GetIsProxy() bool {
+	if x != nil {
+		return x.IsProxy
+	}
+	return false
+}
+
+type IPLookupRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	IpAddress string `protobuf:"bytes,1,opt,name=ipAddress,proto3" json:"ipAddress,omitempty"`
+}
+
+func (x *IPLookupRequest) Reset() {
+	*x = IPLookupRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nebulapb_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *IPLookupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IPLookupRequest) ProtoMessage() {}
+
+func (x *IPLookupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_nebulapb_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IPLookupRequest.ProtoReflect.Descriptor instead.
+func (*IPLookupRequest) Descriptor() ([]byte, []int) {
+	return file_nebulapb_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *IPLookupRequest) GetIpAddress() string {
+	if x != nil {
+		return x.IpAddress
+	}
+	return ""
+}
+
+type IPLookupResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Result *IPLookupResult `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+}
+
+func (x *IPLookupResponse) Reset() {
+	*x = IPLookupResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nebulapb_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *IPLookupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IPLookupResponse) ProtoMessage() {}
+
+func (x *IPLookupResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_nebulapb_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IPLookupResponse.ProtoReflect.Descriptor instead.
+func (*IPLookupResponse) Descriptor() ([]byte, []int) {
+	return file_nebulapb_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *IPLookupResponse) GetResult() *IPLookupResult {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
 type ServerStatus_Version struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1141,7 +1315,7 @@ type ServerStatus_Version struct {
 func (x *ServerStatus_Version) Reset() {
 	*x = ServerStatus_Version{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_nebulapb_proto_msgTypes[20]
+		mi := &file_nebulapb_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1154,7 +1328,7 @@ func (x *ServerStatus_Version) String() string {
 func (*ServerStatus_Version) ProtoMessage() {}
 
 func (x *ServerStatus_Version) ProtoReflect() protoreflect.Message {
-	mi := &file_nebulapb_proto_msgTypes[20]
+	mi := &file_nebulapb_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1196,7 +1370,7 @@ type ServerStatus_Players struct {
 func (x *ServerStatus_Players) Reset() {
 	*x = ServerStatus_Players{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_nebulapb_proto_msgTypes[21]
+		mi := &file_nebulapb_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1209,7 +1383,7 @@ func (x *ServerStatus_Players) String() string {
 func (*ServerStatus_Players) ProtoMessage() {}
 
 func (x *ServerStatus_Players) ProtoReflect() protoreflect.Message {
-	mi := &file_nebulapb_proto_msgTypes[21]
+	mi := &file_nebulapb_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1347,7 +1521,24 @@ var file_nebulapb_proto_rawDesc = []byte{
 	0x77, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2b, 0x0a, 0x05, 0x65, 0x6e,
 	0x74, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6e, 0x65, 0x62, 0x75,
 	0x6c, 0x61, 0x70, 0x62, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x45, 0x6e, 0x74, 0x72, 0x79,
-	0x52, 0x05, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x32, 0xc8, 0x04, 0x0a, 0x06, 0x4e, 0x65, 0x62, 0x75,
+	0x52, 0x05, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x22, 0x96, 0x01, 0x0a, 0x0e, 0x49, 0x50, 0x4c, 0x6f,
+	0x6f, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x70,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x69,
+	0x70, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x73, 0x70, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x69, 0x73, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x75, 0x73,
+	0x61, 0x67, 0x65, 0x54, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x75,
+	0x73, 0x61, 0x67, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x73, 0x43, 0x72,
+	0x61, 0x77, 0x6c, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x69, 0x73, 0x43,
+	0x72, 0x61, 0x77, 0x6c, 0x65, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x78,
+	0x79, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x78, 0x79,
+	0x22, 0x2f, 0x0a, 0x0f, 0x49, 0x50, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x70, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x69, 0x70, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x22, 0x44, 0x0a, 0x10, 0x49, 0x50, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x70, 0x62,
+	0x2e, 0x49, 0x50, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52,
+	0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x32, 0x8d, 0x05, 0x0a, 0x06, 0x4e, 0x65, 0x62, 0x75,
 	0x6c, 0x61, 0x12, 0x55, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x45,
 	0x6e, 0x74, 0x72, 0x79, 0x12, 0x1f, 0x2e, 0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x70, 0x62, 0x2e,
 	0x47, 0x65, 0x74, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x65,
@@ -1384,10 +1575,15 @@ var file_nebulapb_proto_rawDesc = []byte{
 	0x65, 0x74, 0x4c, 0x6f, 0x63, 0x6b, 0x64, 0x6f, 0x77, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x1d, 0x2e, 0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x70, 0x62, 0x2e, 0x53, 0x65, 0x74,
 	0x4c, 0x6f, 0x63, 0x6b, 0x64, 0x6f, 0x77, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x42, 0x34, 0x0a, 0x18, 0x6e, 0x65, 0x74, 0x2e, 0x73, 0x79, 0x6e, 0x63, 0x68, 0x74,
-	0x68, 0x69, 0x61, 0x2e, 0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x2d, 0x61, 0x70, 0x69, 0x42, 0x0c,
-	0x4e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x5a, 0x0a, 0x2e, 0x2f,
-	0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x00, 0x12, 0x43, 0x0a, 0x08, 0x49, 0x50, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70, 0x12, 0x19,
+	0x2e, 0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x70, 0x62, 0x2e, 0x49, 0x50, 0x4c, 0x6f, 0x6f, 0x6b,
+	0x75, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x6e, 0x65, 0x62, 0x75,
+	0x6c, 0x61, 0x70, 0x62, 0x2e, 0x49, 0x50, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x34, 0x0a, 0x18, 0x6e, 0x65, 0x74, 0x2e, 0x73,
+	0x79, 0x6e, 0x63, 0x68, 0x74, 0x68, 0x69, 0x61, 0x2e, 0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x2e,
+	0x61, 0x70, 0x69, 0x42, 0x0c, 0x4e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x73, 0x5a, 0x0a, 0x2e, 0x2f, 0x6e, 0x65, 0x62, 0x75, 0x6c, 0x61, 0x70, 0x62, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1403,7 +1599,7 @@ func file_nebulapb_proto_rawDescGZIP() []byte {
 }
 
 var file_nebulapb_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_nebulapb_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_nebulapb_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_nebulapb_proto_goTypes = []interface{}{
 	(ServerEntryStream_Type)(0),       // 0: nebulapb.ServerEntryStream.Type
 	(BungeeEntryStream_Type)(0),       // 1: nebulapb.BungeeEntryStream.Type
@@ -1427,16 +1623,19 @@ var file_nebulapb_proto_goTypes = []interface{}{
 	(*SetFaviconResponse)(nil),        // 19: nebulapb.SetFaviconResponse
 	(*SetLockdownRequest)(nil),        // 20: nebulapb.SetLockdownRequest
 	(*SetLockdownResponse)(nil),       // 21: nebulapb.SetLockdownResponse
-	(*ServerStatus_Version)(nil),      // 22: nebulapb.ServerStatus.Version
-	(*ServerStatus_Players)(nil),      // 23: nebulapb.ServerStatus.Players
+	(*IPLookupResult)(nil),            // 22: nebulapb.IPLookupResult
+	(*IPLookupRequest)(nil),           // 23: nebulapb.IPLookupRequest
+	(*IPLookupResponse)(nil),          // 24: nebulapb.IPLookupResponse
+	(*ServerStatus_Version)(nil),      // 25: nebulapb.ServerStatus.Version
+	(*ServerStatus_Players)(nil),      // 26: nebulapb.ServerStatus.Players
 }
 var file_nebulapb_proto_depIdxs = []int32{
 	0,  // 0: nebulapb.ServerEntryStream.type:type_name -> nebulapb.ServerEntryStream.Type
 	3,  // 1: nebulapb.ServerEntryStream.entry:type_name -> nebulapb.ServerEntry
 	4,  // 2: nebulapb.ServerEntry.lockdown:type_name -> nebulapb.Lockdown
 	5,  // 3: nebulapb.ServerEntry.status:type_name -> nebulapb.ServerStatus
-	22, // 4: nebulapb.ServerStatus.version:type_name -> nebulapb.ServerStatus.Version
-	23, // 5: nebulapb.ServerStatus.players:type_name -> nebulapb.ServerStatus.Players
+	25, // 4: nebulapb.ServerStatus.version:type_name -> nebulapb.ServerStatus.Version
+	26, // 5: nebulapb.ServerStatus.players:type_name -> nebulapb.ServerStatus.Players
 	3,  // 6: nebulapb.GetServerEntryResponse.entry:type_name -> nebulapb.ServerEntry
 	3,  // 7: nebulapb.AddServerEntryRequest.entry:type_name -> nebulapb.ServerEntry
 	1,  // 8: nebulapb.BungeeEntryStream.type:type_name -> nebulapb.BungeeEntryStream.Type
@@ -1444,25 +1643,28 @@ var file_nebulapb_proto_depIdxs = []int32{
 	13, // 10: nebulapb.GetBungeeEntryResponse.entry:type_name -> nebulapb.BungeeEntry
 	4,  // 11: nebulapb.SetLockdownRequest.lockdown:type_name -> nebulapb.Lockdown
 	3,  // 12: nebulapb.SetLockdownResponse.entry:type_name -> nebulapb.ServerEntry
-	6,  // 13: nebulapb.Nebula.GetServerEntry:input_type -> nebulapb.GetServerEntryRequest
-	8,  // 14: nebulapb.Nebula.AddServerEntry:input_type -> nebulapb.AddServerEntryRequest
-	10, // 15: nebulapb.Nebula.RemoveServerEntry:input_type -> nebulapb.RemoveServerEntryRequest
-	14, // 16: nebulapb.Nebula.GetBungeeEntry:input_type -> nebulapb.GetBungeeEntryRequest
-	16, // 17: nebulapb.Nebula.SetMotd:input_type -> nebulapb.SetMotdRequest
-	18, // 18: nebulapb.Nebula.SetFavicon:input_type -> nebulapb.SetFaviconRequest
-	20, // 19: nebulapb.Nebula.SetLockdown:input_type -> nebulapb.SetLockdownRequest
-	7,  // 20: nebulapb.Nebula.GetServerEntry:output_type -> nebulapb.GetServerEntryResponse
-	9,  // 21: nebulapb.Nebula.AddServerEntry:output_type -> nebulapb.AddServerEntryResponse
-	11, // 22: nebulapb.Nebula.RemoveServerEntry:output_type -> nebulapb.RemoveServerEntryResponse
-	15, // 23: nebulapb.Nebula.GetBungeeEntry:output_type -> nebulapb.GetBungeeEntryResponse
-	17, // 24: nebulapb.Nebula.SetMotd:output_type -> nebulapb.SetMotdResponse
-	19, // 25: nebulapb.Nebula.SetFavicon:output_type -> nebulapb.SetFaviconResponse
-	21, // 26: nebulapb.Nebula.SetLockdown:output_type -> nebulapb.SetLockdownResponse
-	20, // [20:27] is the sub-list for method output_type
-	13, // [13:20] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	22, // 13: nebulapb.IPLookupResponse.result:type_name -> nebulapb.IPLookupResult
+	6,  // 14: nebulapb.Nebula.GetServerEntry:input_type -> nebulapb.GetServerEntryRequest
+	8,  // 15: nebulapb.Nebula.AddServerEntry:input_type -> nebulapb.AddServerEntryRequest
+	10, // 16: nebulapb.Nebula.RemoveServerEntry:input_type -> nebulapb.RemoveServerEntryRequest
+	14, // 17: nebulapb.Nebula.GetBungeeEntry:input_type -> nebulapb.GetBungeeEntryRequest
+	16, // 18: nebulapb.Nebula.SetMotd:input_type -> nebulapb.SetMotdRequest
+	18, // 19: nebulapb.Nebula.SetFavicon:input_type -> nebulapb.SetFaviconRequest
+	20, // 20: nebulapb.Nebula.SetLockdown:input_type -> nebulapb.SetLockdownRequest
+	23, // 21: nebulapb.Nebula.IPLookup:input_type -> nebulapb.IPLookupRequest
+	7,  // 22: nebulapb.Nebula.GetServerEntry:output_type -> nebulapb.GetServerEntryResponse
+	9,  // 23: nebulapb.Nebula.AddServerEntry:output_type -> nebulapb.AddServerEntryResponse
+	11, // 24: nebulapb.Nebula.RemoveServerEntry:output_type -> nebulapb.RemoveServerEntryResponse
+	15, // 25: nebulapb.Nebula.GetBungeeEntry:output_type -> nebulapb.GetBungeeEntryResponse
+	17, // 26: nebulapb.Nebula.SetMotd:output_type -> nebulapb.SetMotdResponse
+	19, // 27: nebulapb.Nebula.SetFavicon:output_type -> nebulapb.SetFaviconResponse
+	21, // 28: nebulapb.Nebula.SetLockdown:output_type -> nebulapb.SetLockdownResponse
+	24, // 29: nebulapb.Nebula.IPLookup:output_type -> nebulapb.IPLookupResponse
+	22, // [22:30] is the sub-list for method output_type
+	14, // [14:22] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_nebulapb_proto_init() }
@@ -1712,7 +1914,7 @@ func file_nebulapb_proto_init() {
 			}
 		}
 		file_nebulapb_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ServerStatus_Version); i {
+			switch v := v.(*IPLookupResult); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1724,6 +1926,42 @@ func file_nebulapb_proto_init() {
 			}
 		}
 		file_nebulapb_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*IPLookupRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nebulapb_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*IPLookupResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nebulapb_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ServerStatus_Version); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nebulapb_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ServerStatus_Players); i {
 			case 0:
 				return &v.state
@@ -1742,7 +1980,7 @@ func file_nebulapb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_nebulapb_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   22,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

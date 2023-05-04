@@ -11,7 +11,7 @@ import (
 )
 
 func (s *grpcServer) pinging() {
-	e, err := s.mysql.GetAllServerEntry()
+	e, err := s.svc.MySQL.GetAllServerEntry()
 	if err != nil {
 		logrus.Errorf("[Database] Error %s", err)
 	} else {
@@ -30,7 +30,7 @@ func (s *grpcServer) pinging() {
 					statusJson, _ := json.Marshal(database.PingResponse{})
 					data.Status = string(statusJson)
 				}
-				_, _, pushErr := s.mysql.PushServerStatus(data.Name, data.Status)
+				_, _, pushErr := s.svc.MySQL.PushServerStatus(data.Name, data.Status)
 				//s.mu.Unlock()
 				if pushErr != nil {
 					return
