@@ -48,6 +48,13 @@ type DBIPResult struct {
 	ThreatLevel   string   `json:"threatLevel"`
 }
 
+type IPLookupResult struct {
+	IPAddress    string
+	ISP          string
+	IsSuspicious bool
+	Reason       string
+}
+
 func NewIPFilter(config *IPFilterConfig) (*IPFilter, error) {
 	logrus.Printf("[IPFilter] Initialize IP Filter...")
 
@@ -57,7 +64,37 @@ func NewIPFilter(config *IPFilterConfig) (*IPFilter, error) {
 }
 
 // Check - check user ip
-func (ipfw *IPFilter) Check(ip string) (*DBIPResult, error) {
+func (ipfw *IPFilter) Check(ip string) (*IPLookupResult, error) {
+	// Check DBIP
+	dbipRes, err := ipfw.LookupDBIP(ip)
+	if err != nil {
+		return nil, err
+	}
+
+	if dbipRes.ThreatLevel == "medium" || dbipRes.ThreatLevel == "high" {
+		return &IPLookupResult{
+			IPAddress:    dbipRes.IPAddress,
+			ISP:          dbipRes.Isp,
+			IsSuspicious: true,
+			Reason:       "THREAT_LEVEL_ABOVE_MEDIUM",
+		}, nil
+	} else if dbipRes.UsageType == "hosting" {
+		return &IPLookupResult{
+			IPAddress:    dbipRes.IPAddress,
+			ISP:          dbipRes.Isp,
+			IsSuspicious: true,
+			Reason:       "HOSTING",
+		}, nil
+	}
+
+	return &IPLookupResult{
+		IPAddress:    ip,
+		IsSuspicious: false,
+	}, nil
+}
+
+// LookupDBIP - check user ip
+func (ipfw *IPFilter) LookupDBIP(ip string) (*DBIPResult, error) {
 	if len(ipfw.config.DBIPToken) == 0 {
 		logrus.Printf("ERR: DB_IP_TOKEN is empty?")
 	}
@@ -86,6 +123,8 @@ func (ipfw *IPFilter) Check(ip string) (*DBIPResult, error) {
 	if err := json.Unmarshal(b, &parsed); err != nil {
 		return nil, err
 	}
+
+	//:wlogrus.Debugf("[IPFilter] Lookup result")
 
 	return parsed, nil
 }

@@ -63,7 +63,7 @@ func main() {
 		mysqlConStr = "root:docker@tcp(localhost:3306)/nebula?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 	mysqlClient := database.NewMysqlClient(mysqlConStr, "nebula")
-    svc.MySQL = mysqlClient
+	svc.MySQL = mysqlClient
 
 	// gRPC
 	wait := make(chan struct{})

@@ -152,11 +152,10 @@ func (s *grpcServer) IPLookup(ctx context.Context, e *pb.IPLookupRequest) (*pb.I
 
 		return &pb.IPLookupResponse{
 			Result: &pb.IPLookupResult{
-				IpAddress: res.IPAddress,
-				Isp:       res.Isp,
-				UsageType: res.UsageType,
-				IsProxy:   res.IsProxy,
-				IsCrawler: res.IsCrawler,
+				IpAddress:    res.IPAddress,
+				Isp:          res.ISP,
+				IsSuspicious: res.IsSuspicious,
+				Reason:       res.Reason,
 			},
 		}, nil
 	} else {

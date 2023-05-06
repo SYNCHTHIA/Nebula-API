@@ -135,9 +135,8 @@ message SetLockdownResponse {
 message IPLookupResult {
     string ipAddress = 1;
     string isp = 2;
-    string usageType = 3;
-    bool isCrawler = 4;
-    bool isProxy = 5;
+    bool isSuspicious = 3;
+    string reason = 4;
 }
 
 message IPLookupRequest {
