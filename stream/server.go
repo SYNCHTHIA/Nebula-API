@@ -9,7 +9,7 @@ import (
 )
 
 // PublishServer - Publish with Redis
-func PublishServer(data *nebulapb.ServerEntry) {
+func PublishServer(data *nebulapb.ServerEntry) error {
 	c := pool.Get()
 	defer c.Close()
 
@@ -23,11 +23,13 @@ func PublishServer(data *nebulapb.ServerEntry) {
 	_, err := c.Do("PUBLISH", "nebula.servers.global", string(serialized))
 	if err != nil {
 		logrus.WithError(err).Errorf("[Publish] Failed Publish Server")
+		return err
 	}
+	return nil
 }
 
 // PublishRemoveServer - Remove Server send Redis
-func PublishRemoveServer(data *nebulapb.ServerEntry) {
+func PublishRemoveServer(data *nebulapb.ServerEntry) error {
 	c := pool.Get()
 	defer c.Close()
 
@@ -40,5 +42,7 @@ func PublishRemoveServer(data *nebulapb.ServerEntry) {
 	_, err := c.Do("PUBLISH", "nebula.servers.global", string(serialized))
 	if err != nil {
 		logrus.WithError(err).Errorf("[Publish] Failed Remove Server")
+		return err
 	}
+	return nil
 }

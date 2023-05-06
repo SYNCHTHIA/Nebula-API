@@ -18,6 +18,9 @@ service Nebula {
     // API -> Bungee (BungeeEntry)
     rpc GetBungeeEntry(GetBungeeEntryRequest) returns (GetBungeeEntryResponse) {}
 
+    // API -> Bungee(command)
+    rpc SendBungeeCommand(SendBungeeCommandRequest) returns (SendBungeeCommandResponse) {}
+
     // API <- App
     rpc SetMotd(SetMotdRequest) returns (SetMotdResponse) {}
 
@@ -99,9 +102,11 @@ message RemoveServerEntryResponse {}
 message BungeeEntryStream {
     enum Type {
         SYNC = 0;
+        COMMAND = 1;
     }
     Type type = 1;
     BungeeEntry entry = 2;
+    string command = 3;
 }
 
 message BungeeEntry {
@@ -113,6 +118,12 @@ message GetBungeeEntryRequest {}
 message GetBungeeEntryResponse {
     BungeeEntry entry = 1;
 }
+
+message SendBungeeCommandRequest {
+    string command = 1;
+}
+
+message SendBungeeCommandResponse {}
 
 message SetMotdRequest { string motd = 1; }
 message SetMotdResponse {}

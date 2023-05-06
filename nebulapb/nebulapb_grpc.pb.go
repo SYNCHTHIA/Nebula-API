@@ -30,6 +30,8 @@ type NebulaClient interface {
 	RemoveServerEntry(ctx context.Context, in *RemoveServerEntryRequest, opts ...grpc.CallOption) (*RemoveServerEntryResponse, error)
 	// API -> Bungee (BungeeEntry)
 	GetBungeeEntry(ctx context.Context, in *GetBungeeEntryRequest, opts ...grpc.CallOption) (*GetBungeeEntryResponse, error)
+	// API -> Bungee(command)
+	SendBungeeCommand(ctx context.Context, in *SendBungeeCommandRequest, opts ...grpc.CallOption) (*SendBungeeCommandResponse, error)
 	// API <- App
 	SetMotd(ctx context.Context, in *SetMotdRequest, opts ...grpc.CallOption) (*SetMotdResponse, error)
 	// API <- App
@@ -84,6 +86,15 @@ func (c *nebulaClient) GetBungeeEntry(ctx context.Context, in *GetBungeeEntryReq
 	return out, nil
 }
 
+func (c *nebulaClient) SendBungeeCommand(ctx context.Context, in *SendBungeeCommandRequest, opts ...grpc.CallOption) (*SendBungeeCommandResponse, error) {
+	out := new(SendBungeeCommandResponse)
+	err := c.cc.Invoke(ctx, "/nebulapb.Nebula/SendBungeeCommand", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *nebulaClient) SetMotd(ctx context.Context, in *SetMotdRequest, opts ...grpc.CallOption) (*SetMotdResponse, error) {
 	out := new(SetMotdResponse)
 	err := c.cc.Invoke(ctx, "/nebulapb.Nebula/SetMotd", in, out, opts...)
@@ -132,6 +143,8 @@ type NebulaServer interface {
 	RemoveServerEntry(context.Context, *RemoveServerEntryRequest) (*RemoveServerEntryResponse, error)
 	// API -> Bungee (BungeeEntry)
 	GetBungeeEntry(context.Context, *GetBungeeEntryRequest) (*GetBungeeEntryResponse, error)
+	// API -> Bungee(command)
+	SendBungeeCommand(context.Context, *SendBungeeCommandRequest) (*SendBungeeCommandResponse, error)
 	// API <- App
 	SetMotd(context.Context, *SetMotdRequest) (*SetMotdResponse, error)
 	// API <- App
@@ -157,6 +170,9 @@ func (UnimplementedNebulaServer) RemoveServerEntry(context.Context, *RemoveServe
 }
 func (UnimplementedNebulaServer) GetBungeeEntry(context.Context, *GetBungeeEntryRequest) (*GetBungeeEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBungeeEntry not implemented")
+}
+func (UnimplementedNebulaServer) SendBungeeCommand(context.Context, *SendBungeeCommandRequest) (*SendBungeeCommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendBungeeCommand not implemented")
 }
 func (UnimplementedNebulaServer) SetMotd(context.Context, *SetMotdRequest) (*SetMotdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetMotd not implemented")
@@ -250,6 +266,24 @@ func _Nebula_GetBungeeEntry_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NebulaServer).GetBungeeEntry(ctx, req.(*GetBungeeEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nebula_SendBungeeCommand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendBungeeCommandRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NebulaServer).SendBungeeCommand(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nebulapb.Nebula/SendBungeeCommand",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NebulaServer).SendBungeeCommand(ctx, req.(*SendBungeeCommandRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -348,6 +382,10 @@ var Nebula_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBungeeEntry",
 			Handler:    _Nebula_GetBungeeEntry_Handler,
+		},
+		{
+			MethodName: "SendBungeeCommand",
+			Handler:    _Nebula_SendBungeeCommand_Handler,
 		},
 		{
 			MethodName: "SetMotd",

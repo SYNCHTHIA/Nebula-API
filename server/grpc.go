@@ -112,17 +112,38 @@ func (s *grpcServer) GetBungeeEntry(ctx context.Context, e *pb.GetBungeeEntryReq
 	return &pb.GetBungeeEntryResponse{Entry: s.BungeeEntry_DBtoPB(entry)}, err
 }
 
+func (s *grpcServer) SendBungeeCommand(ctx context.Context, e *pb.SendBungeeCommandRequest) (*pb.SendBungeeCommandResponse, error) {
+	if err := stream.PublishBungeeCommand(e.Command); err != nil {
+		return &pb.SendBungeeCommandResponse{}, err
+	}
+	return &pb.SendBungeeCommandResponse{}, nil
+}
+
 func (s *grpcServer) SetMotd(ctx context.Context, e *pb.SetMotdRequest) (*pb.SetMotdResponse, error) {
-	err := s.svc.MySQL.SetMotd(e.Motd)
+	if err := s.svc.MySQL.SetMotd(e.Motd); err != nil {
+		return &pb.SetMotdResponse{}, err
+	}
 	entry, err := s.svc.MySQL.GetBungeeEntry()
-	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
+	if err != nil {
+		return &pb.SetMotdResponse{}, err
+	}
+	if err := stream.PublishBungeeEntry(s.BungeeEntry_DBtoPB(entry)); err != nil {
+		return &pb.SetMotdResponse{}, err
+	}
 	return &pb.SetMotdResponse{}, err
 }
 
 func (s *grpcServer) SetFavicon(ctx context.Context, e *pb.SetFaviconRequest) (*pb.SetFaviconResponse, error) {
-	err := s.svc.MySQL.SetFavicon(e.Favicon)
+	if err := s.svc.MySQL.SetFavicon(e.Favicon); err != nil {
+		return &pb.SetFaviconResponse{}, err
+	}
 	entry, err := s.svc.MySQL.GetBungeeEntry()
-	stream.PublishBungee(s.BungeeEntry_DBtoPB(entry))
+	if err != nil {
+		return &pb.SetFaviconResponse{}, err
+	}
+	if err := stream.PublishBungeeEntry(s.BungeeEntry_DBtoPB(entry)); err != nil {
+		return &pb.SetFaviconResponse{}, err
+	}
 	return &pb.SetFaviconResponse{}, err
 }
 
@@ -130,14 +151,15 @@ func (s *grpcServer) SetLockdown(ctx context.Context, e *pb.SetLockdownRequest) 
 	if e.Lockdown.Enabled && e.Lockdown.Description == "" {
 		e.Lockdown.Description = "&cThis server currently not available"
 	}
-
 	if err := s.svc.MySQL.SetLockdown(e.Name, e.Lockdown.Enabled, e.Lockdown.Description); err != nil {
 		return &pb.SetLockdownResponse{}, err
 	}
-
 	entry, err := s.svc.MySQL.GetServerEntry(e.Name)
-	if err == nil {
-		stream.PublishServer(s.ServerEntry_DBtoPB(entry))
+	if err != nil {
+		return &pb.SetLockdownResponse{}, err
+	}
+	if err := stream.PublishServer(s.ServerEntry_DBtoPB(entry)); err != nil {
+		return &pb.SetLockdownResponse{}, err
 	}
 
 	return &pb.SetLockdownResponse{Entry: s.ServerEntry_DBtoPB(entry)}, err

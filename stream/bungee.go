@@ -7,8 +7,26 @@ import (
 	"github.com/synchthia/nebula-api/nebulapb"
 )
 
-// PublishBungee - PublishBungee Entry with Redis
-func PublishBungee(data *nebulapb.BungeeEntry) {
+// PublishBungeeCommand - Send to proxy commands to BungeeCord
+func PublishBungeeCommand(cmd string) error {
+	c := pool.Get()
+	defer c.Close()
+
+	d := nebulapb.BungeeEntryStream{
+		Type:    nebulapb.BungeeEntryStream_COMMAND,
+		Command: cmd,
+	}
+	serialized, _ := json.Marshal(&d)
+	_, err := c.Do("PUBLISH", "nebula.bungee.global", string(serialized))
+	if err != nil {
+		logrus.WithError(err).Errorf("[Publish] Failed Publish BungeeCommand")
+		return err
+	}
+	return nil
+}
+
+// PublishBungeeEntry - PublishBungeeEntry Entry with Redis
+func PublishBungeeEntry(data *nebulapb.BungeeEntry) error {
 	c := pool.Get()
 	defer c.Close()
 
@@ -21,6 +39,8 @@ func PublishBungee(data *nebulapb.BungeeEntry) {
 
 	_, err := c.Do("PUBLISH", "nebula.bungee.global", string(serialized))
 	if err != nil {
-		logrus.WithError(err).Errorf("[Publish] Failed Publish Bungee")
+		logrus.WithError(err).Errorf("[Publish] Failed Publish BungeeEntry")
+		return err
 	}
+	return nil
 }
