@@ -5,6 +5,7 @@ on:
       - master
 
 env:
+  GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/398354387844/locations/global/workloadIdentityPools/github-actions"
   IMAGE_NAME: "nebula-api"
 
 jobs:
@@ -17,13 +18,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: "github-actions@startail-io.iam.gserviceaccount.com"
       - uses: actions/setup-java@v3
         with:
           java-version: "17"
           distribution: "adopt"
       - name: Build and Deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           bash ./nebulapb/make-java.sh deploy
 
