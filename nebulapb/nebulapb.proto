@@ -6,32 +6,34 @@ option java_package = "net.synchthia.nebula.api";
 option java_outer_classname = "NebulaProtos";
 
 service Nebula {
-    // API -> Bungee (ServerEntry)
-    rpc GetServerEntry(GetServerEntryRequest) returns (GetServerEntryResponse) {}
+  // API -> Bungee (ServerEntry)
+  rpc GetServerEntry(GetServerEntryRequest) returns (GetServerEntryResponse) {}
 
-    // API <- App
-    rpc AddServerEntry(AddServerEntryRequest) returns (AddServerEntryResponse) {}
+  // API <- App
+  rpc AddServerEntry(AddServerEntryRequest) returns (AddServerEntryResponse) {}
 
-    // API <- App
-    rpc RemoveServerEntry(RemoveServerEntryRequest) returns (RemoveServerEntryResponse) {}
+  // API <- App
+  rpc RemoveServerEntry(RemoveServerEntryRequest)
+      returns (RemoveServerEntryResponse) {}
 
-    // API -> Bungee (BungeeEntry)
-    rpc GetBungeeEntry(GetBungeeEntryRequest) returns (GetBungeeEntryResponse) {}
+  // API -> Bungee (BungeeEntry)
+  rpc GetBungeeEntry(GetBungeeEntryRequest) returns (GetBungeeEntryResponse) {}
 
-    // API -> Bungee(command)
-    rpc SendBungeeCommand(SendBungeeCommandRequest) returns (SendBungeeCommandResponse) {}
+  // API -> Bungee(command)
+  rpc SendBungeeCommand(SendBungeeCommandRequest)
+      returns (SendBungeeCommandResponse) {}
 
-    // API <- App
-    rpc SetMotd(SetMotdRequest) returns (SetMotdResponse) {}
+  // API <- App
+  rpc SetMotd(SetMotdRequest) returns (SetMotdResponse) {}
 
-    // API <- App
-    rpc SetFavicon(SetFaviconRequest) returns (SetFaviconResponse) {}
+  // API <- App
+  rpc SetFavicon(SetFaviconRequest) returns (SetFaviconResponse) {}
 
-    // API <- App
-    rpc SetLockdown(SetLockdownRequest) returns (SetLockdownResponse) {}
+  // API <- App
+  rpc SetLockdown(SetLockdownRequest) returns (SetLockdownResponse) {}
 
-    // API <- Bungee / Server
-    rpc IPLookup(IPLookupRequest) returns (IPLookupResponse) {}
+  // API <- Bungee / Server
+  rpc IPLookup(IPLookupRequest) returns (IPLookupResponse) {}
 }
 
 //--
@@ -40,48 +42,48 @@ service Nebula {
 
 // ServerEntryStream (type: sync, remove)
 message ServerEntryStream {
-    enum Type {
-        SYNC = 0;
-        REMOVE = 1;
-    }
-    Type type = 1;
-    ServerEntry entry = 2;
+  enum Type {
+    SYNC = 0;
+    REMOVE = 1;
+  }
+  Type type = 1;
+  ServerEntry entry = 2;
 }
 
 message ServerEntry {
-    string name = 1;
-    string displayName = 2;
-    string address = 3;
-    int32 port = 4;
-    string motd = 5;
-    bool fallback = 6;
-    Lockdown lockdown = 7;
-    ServerStatus status = 8;
+  string name = 1;
+  string displayName = 2;
+  string address = 3;
+  int32 port = 4;
+  string motd = 5;
+  bool fallback = 6;
+  Lockdown lockdown = 7;
+  ServerStatus status = 8;
 }
 
 message Lockdown {
-    bool enabled = 1;
-    string description = 2;
+  bool enabled = 1;
+  string description = 2;
 }
 
 message ServerStatus {
-    bool online = 1;
-    Version version = 2;
-    message Version {
-        string name = 1;
-        int32 protocol = 2;
-    }
+  bool online = 1;
+  Version version = 2;
+  message Version {
+    string name = 1;
+    int32 protocol = 2;
+  }
 
-    Players players = 3;
-    message Players {
-        int32 max = 1;
-        int32 online = 2;
-        // should be have sample?
-    }
+  Players players = 3;
+  message Players {
+    int32 max = 1;
+    int32 online = 2;
+    // should be have sample?
+  }
 
-    // i don't have any idea... (need map)
-    string description = 4;
-    string favicon = 5;
+  // i don't have any idea... (need map)
+  string description = 4;
+  string favicon = 5;
 }
 
 //
@@ -100,28 +102,24 @@ message RemoveServerEntryResponse {}
 // Bungee Entry
 //--
 message BungeeEntryStream {
-    enum Type {
-        SYNC = 0;
-        COMMAND = 1;
-    }
-    Type type = 1;
-    BungeeEntry entry = 2;
-    string command = 3;
+  enum Type {
+    SYNC = 0;
+    COMMAND = 1;
+  }
+  Type type = 1;
+  BungeeEntry entry = 2;
+  string command = 3;
 }
 
 message BungeeEntry {
-    string motd = 1;
-    string favicon = 2;
+  string motd = 1;
+  string favicon = 2;
 }
 
 message GetBungeeEntryRequest {}
-message GetBungeeEntryResponse {
-    BungeeEntry entry = 1;
-}
+message GetBungeeEntryResponse { BungeeEntry entry = 1; }
 
-message SendBungeeCommandRequest {
-    string command = 1;
-}
+message SendBungeeCommandRequest { string command = 1; }
 
 message SendBungeeCommandResponse {}
 
@@ -132,28 +130,22 @@ message SetFaviconRequest { string favicon = 1; }
 message SetFaviconResponse {}
 
 message SetLockdownRequest {
-    string name = 1;
-    Lockdown lockdown = 2;
+  string name = 1;
+  Lockdown lockdown = 2;
 }
 
-message SetLockdownResponse {
-    ServerEntry entry = 1;
-}
+message SetLockdownResponse { ServerEntry entry = 1; }
 
 //
 // IP Lookup
 //
 message IPLookupResult {
-    string ipAddress = 1;
-    string isp = 2;
-    bool isSuspicious = 3;
-    string reason = 4;
+  string ipAddress = 1;
+  string isp = 2;
+  bool isSuspicious = 3;
+  string reason = 4;
 }
 
-message IPLookupRequest {
-    string ipAddress = 1;
-}
+message IPLookupRequest { string ipAddress = 1; }
 
-message IPLookupResponse {
-    IPLookupResult result = 1;
-}
+message IPLookupResponse { IPLookupResult result = 1; }
