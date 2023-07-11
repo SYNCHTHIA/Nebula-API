@@ -20,11 +20,8 @@
         </repository>
 
         <repository>
-            <id>artifact-registry</id>
-            <url>artifactregistry://asia-northeast1-maven.pkg.dev/startail-io/startail-public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
+            <id>startail-public</id>
+            <url>https://maven.pkg.github.com/synchthia/pkg-startail-public</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -32,13 +29,10 @@
     </repositories>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>artifact-registry</id>
-            <url>artifactregistry://asia-northeast1-maven.pkg.dev/startail-io/startail-public</url>
-        </snapshotRepository>
         <repository>
-            <id>artifact-registry</id>
-            <url>artifactregistry://asia-northeast1-maven.pkg.dev/startail-io/startail-public</url>
+            <id>startail-public</id>
+            <name>GitHub synchthia Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/synchthia/pkg-startail-public</url>
         </repository>
     </distributionManagement>
 
