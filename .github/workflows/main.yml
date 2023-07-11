@@ -5,8 +5,8 @@ on:
       - master
 
 env:
-  GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/398354387844/locations/global/workloadIdentityPools/github-actions"
   IMAGE_NAME: "nebula-api"
+  MVN_REPO_SERVER_ID: "startail-public"
 
 jobs:
   maven:
@@ -19,22 +19,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: "github-actions@startail-io.iam.gserviceaccount.com"
-      - name: "Set up Cloud SDK"
-        uses: "google-github-actions/setup-gcloud@v1"
-        with:
-          version: ">= 400.0.0"
-          run: |
-            gcloud auth application-default login
       - uses: actions/setup-java@v3
         with:
           java-version: "17"
           distribution: "adopt"
       - name: Build and Deploy
         run: |
+          cat <<EOT > ~/.m2/settings.xml
+          <settings>
+            <servers>
+              <server>
+                <id>${{ env.MVN_REPO_SERVER_ID }}</id>
+                <username>${{ secrets.MVN_REPO_USERNAME }}</username>
+                <password>${{ secrets.MVN_REPO_PASSWORD }}</password>
+              </server>
+            </servers>
+          </settings>
+          EOT
           bash ./nebulapb/make-java.sh deploy
 
   build:
