@@ -30,10 +30,10 @@ type Lockdown struct {
 
 type PingResponse struct {
 	Online      bool
-	Version     VersionData       `json:"version"`
-	Players     PlayersData       `json:"players"`
-	Description map[string]string `json:"description"`
-	Favicon     string            `json:"favicon"`
+	Version     VersionData `json:"version"`
+	Players     PlayersData `json:"players"`
+	Description interface{} `json:"description"`
+	Favicon     string      `json:"favicon"`
 }
 
 type VersionData struct {

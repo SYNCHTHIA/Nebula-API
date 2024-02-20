@@ -220,6 +220,13 @@ func (s *grpcServer) Lockdown_PBtoDB(pbEntry *pb.Lockdown) *database.Lockdown {
 }
 
 func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStatus {
+	var description string
+	if str, ok := dbEntry.Description.(string); ok {
+		description = str
+	} else if m, ok := dbEntry.Description.(map[string]string); ok {
+		description = m["text"]
+	}
+
 	return &pb.ServerStatus{
 		Online: dbEntry.Online,
 		Version: &pb.ServerStatus_Version{
@@ -230,7 +237,7 @@ func (s *grpcServer) Status_DBtoPB(dbEntry database.PingResponse) *pb.ServerStat
 			Max:    int32(dbEntry.Players.Max),
 			Online: int32(dbEntry.Players.Online),
 		},
-		Description: dbEntry.Description["text"],
+		Description: description,
 		Favicon:     dbEntry.Favicon,
 	}
 }
