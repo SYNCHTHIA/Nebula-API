@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 	"net"
 	"strconv"
@@ -104,7 +104,7 @@ func SendHandshake(conn net.Conn, host string) error {
 	pl.WriteByte(0x01)
 
 	if _, err := makePacket(pl).WriteTo(conn); err != nil {
-		return errors.New("cannot write handshake")
+		return fmt.Errorf("cannot write handshake: %w", err)
 	}
 
 	return nil
@@ -117,7 +117,7 @@ func SendStatusRequest(conn net.Conn) error {
 	pl.WriteByte(0x00)
 
 	if _, err := makePacket(pl).WriteTo(conn); err != nil {
-		return errors.New("cannot write send status request")
+		return fmt.Errorf("cannot write send status request: %w", err)
 	}
 
 	return nil
@@ -140,30 +140,30 @@ func ReadPong(rd io.Reader) (*database.PingResponse, error) {
 	r := bufio.NewReader(rd)
 	nl, err := binary.ReadUvarint(r)
 	if err != nil {
-		return nil, errors.New("could not read length")
+		return nil, fmt.Errorf("could not read length: %w", err)
 	}
 
 	pl := make([]byte, nl)
 	_, err = io.ReadFull(r, pl)
 	if err != nil {
-		return nil, errors.New("could not read length given by length header")
+		return nil, fmt.Errorf("could not read length given by length header: %w", err)
 	}
 
 	// packet id
 	_, n := binary.Uvarint(pl)
 	if n <= 0 {
-		return nil, errors.New("could not read packet id")
+		return nil, fmt.Errorf("could not read packet id: %w", err)
 	}
 
 	// string varint
 	_, n2 := binary.Uvarint(pl[n:])
 	if n2 <= 0 {
-		return nil, errors.New("could not read string varint")
+		return nil, fmt.Errorf("could not read string varint: %w", err)
 	}
 
 	res := database.PingResponse{}
 	if err := json.Unmarshal(pl[n+n2:], &res); err != nil {
-		return nil, errors.New("could not read pong json")
+		return nil, fmt.Errorf("could not read pong json: %w", err)
 	}
 
 	return &res, nil
