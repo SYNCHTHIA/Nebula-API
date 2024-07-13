@@ -11,6 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/synchthia/nebula-api/database"
+	"github.com/synchthia/nebula-api/nebulapb"
 	pb "github.com/synchthia/nebula-api/nebulapb"
 	"github.com/synchthia/nebula-api/service"
 	"github.com/synchthia/nebula-api/stream"
@@ -183,6 +184,67 @@ func (s *grpcServer) IPLookup(ctx context.Context, e *pb.IPLookupRequest) (*pb.I
 	} else {
 		return &pb.IPLookupResponse{}, errors.New("iplookup not enabled")
 	}
+}
+
+func (s *grpcServer) PlayerLogin(ctx context.Context, e *pb.PlayerLoginRequest) (*pb.PlayerLoginResponse, error) {
+	if err := stream.PublishPlayerProfile(nebulapb.PlayerPropertiesStream_JOIN_SOLO, e.Profile); err != nil {
+		return &pb.PlayerLoginResponse{}, err
+	}
+
+	if _, err := s.svc.MySQL.SyncPlayer(database.PlayersFromProtobuf(e.Profile), nil); err != nil {
+		return &pb.PlayerLoginResponse{}, err
+	}
+
+	return &pb.PlayerLoginResponse{}, nil
+}
+
+func (s *grpcServer) PlayerQuit(ctx context.Context, e *pb.PlayerQuitRequest) (*pb.PlayerQuitResponse, error) {
+	quit, err := s.svc.MySQL.SyncPlayer(database.PlayersFromProtobuf(e.Profile), &database.UpdateOption{IsQuit: true})
+	if err != nil {
+		return &pb.PlayerQuitResponse{}, err
+	}
+
+	if quit {
+		if err := stream.PublishPlayerProfile(nebulapb.PlayerPropertiesStream_QUIT_SOLO, e.Profile); err != nil {
+			return &pb.PlayerQuitResponse{}, err
+		}
+	}
+
+	return &pb.PlayerQuitResponse{}, nil
+}
+
+func (s *grpcServer) FetchAllPlayers(ctx context.Context, e *pb.FetchAllPlayersRequest) (*pb.FetchAllPlayersResponse, error) {
+	r, err := s.svc.MySQL.GetAllPlayers()
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*pb.PlayerProfile
+	for _, r := range r {
+		resp = append(resp, r.ToProtobuf())
+	}
+
+	return &pb.FetchAllPlayersResponse{
+		Profiles: resp,
+	}, nil
+}
+
+func (s *grpcServer) UpdateAllPlayers(ctx context.Context, e *pb.UpdateAllPlayersRequest) (*pb.UpdateAllPlayersResponse, error) {
+	var profiles []database.Players
+
+	if len(e.Profiles) == 0 {
+		return &pb.UpdateAllPlayersResponse{}, nil
+	}
+
+	if err := stream.PublicAllPlayerProfile(nebulapb.PlayerPropertiesStream_ADVERTISE_ALL, e.Profiles); err != nil {
+		return &pb.UpdateAllPlayersResponse{}, err
+	}
+
+	for _, profile := range e.Profiles {
+		profiles = append(profiles, *database.PlayersFromProtobuf(profile))
+	}
+
+	return &pb.UpdateAllPlayersResponse{}, s.svc.MySQL.UpdateAllPlayers(profiles)
 }
 
 func (s *grpcServer) BungeeEntry_DBtoPB(dbEntry database.Bungee) *pb.BungeeEntry {

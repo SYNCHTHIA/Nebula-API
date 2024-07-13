@@ -45,6 +45,11 @@ func NewMysqlClient(mysqlConStr, database string) *Mysql {
 		return nil
 	}
 
+	if err := m.client.AutoMigrate(&Players{}); err != nil {
+		logrus.Fatalf("[MySQL] Failed to migrate: %s", err)
+		return nil
+	}
+
 	if err := m.InitBungeeTable(); err != nil {
 		return nil
 	}

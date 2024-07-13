@@ -34,6 +34,30 @@ service Nebula {
 
   // API <- Bungee / Server
   rpc IPLookup(IPLookupRequest) returns (IPLookupResponse) {}
+
+  // API <- Velocity
+  rpc PlayerLogin(PlayerLoginRequest) returns (PlayerLoginResponse) {}
+  rpc PlayerQuit(PlayerQuitRequest) returns (PlayerQuitResponse) {}
+  rpc FetchAllPlayers(FetchAllPlayersRequest)
+      returns (FetchAllPlayersResponse) {}
+  rpc UpdateAllPlayers(UpdateAllPlayersRequest)
+      returns (UpdateAllPlayersResponse) {}
+}
+
+//--
+// PlayerProfile Entry
+//--
+
+// PlayerPropertiesStream
+message PlayerPropertiesStream {
+  enum Type {
+    JOIN_SOLO = 0;
+    QUIT_SOLO = 1;
+    ADVERTISE_ALL = 2;
+  }
+  Type type = 1;
+  PlayerProfile solo = 2;
+  repeated PlayerProfile all = 3;
 }
 
 //--
@@ -149,3 +173,33 @@ message IPLookupResult {
 message IPLookupRequest { string ipAddress = 1; }
 
 message IPLookupResponse { IPLookupResult result = 1; }
+
+//
+// TabList
+//
+message PlayerProperty {
+  string name = 1;
+  string value = 2;
+  string signature = 3;
+}
+
+message PlayerProfile {
+  string playerUUID = 1;
+  string playerName = 2;
+  int64 playerLatency = 3;
+  string currentServer = 4;
+  repeated PlayerProperty properties = 5;
+  bool hide = 6;
+}
+
+message PlayerLoginRequest { PlayerProfile profile = 1; }
+message PlayerLoginResponse {}
+
+message PlayerQuitRequest { PlayerProfile profile = 1; }
+message PlayerQuitResponse {}
+
+message FetchAllPlayersRequest {}
+message FetchAllPlayersResponse { repeated PlayerProfile profiles = 1; }
+
+message UpdateAllPlayersRequest { repeated PlayerProfile profiles = 1; }
+message UpdateAllPlayersResponse {}
