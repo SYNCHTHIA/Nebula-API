@@ -187,11 +187,11 @@ func (s *grpcServer) IPLookup(ctx context.Context, e *pb.IPLookupRequest) (*pb.I
 }
 
 func (s *grpcServer) PlayerLogin(ctx context.Context, e *pb.PlayerLoginRequest) (*pb.PlayerLoginResponse, error) {
-	if err := stream.PublishPlayerProfile(nebulapb.PlayerPropertiesStream_JOIN_SOLO, e.Profile); err != nil {
+	if err := s.svc.MySQL.SyncPlayer(database.PlayersFromProtobuf(e.Profile), &database.UpdateOption{IsQuit: false}); err != nil {
 		return &pb.PlayerLoginResponse{}, err
 	}
 
-	if _, err := s.svc.MySQL.SyncPlayer(database.PlayersFromProtobuf(e.Profile), nil); err != nil {
+	if err := stream.PublishPlayerProfile(nebulapb.PlayerPropertiesStream_JOIN_SOLO, e.Profile); err != nil {
 		return &pb.PlayerLoginResponse{}, err
 	}
 
@@ -199,15 +199,13 @@ func (s *grpcServer) PlayerLogin(ctx context.Context, e *pb.PlayerLoginRequest) 
 }
 
 func (s *grpcServer) PlayerQuit(ctx context.Context, e *pb.PlayerQuitRequest) (*pb.PlayerQuitResponse, error) {
-	quit, err := s.svc.MySQL.SyncPlayer(database.PlayersFromProtobuf(e.Profile), &database.UpdateOption{IsQuit: true})
+	err := s.svc.MySQL.SyncPlayer(database.PlayersFromProtobuf(e.Profile), &database.UpdateOption{IsQuit: true})
 	if err != nil {
 		return &pb.PlayerQuitResponse{}, err
 	}
 
-	if quit {
-		if err := stream.PublishPlayerProfile(nebulapb.PlayerPropertiesStream_QUIT_SOLO, e.Profile); err != nil {
-			return &pb.PlayerQuitResponse{}, err
-		}
+	if err := stream.PublishPlayerProfile(nebulapb.PlayerPropertiesStream_QUIT_SOLO, e.Profile); err != nil {
+		return &pb.PlayerQuitResponse{}, err
 	}
 
 	return &pb.PlayerQuitResponse{}, nil
