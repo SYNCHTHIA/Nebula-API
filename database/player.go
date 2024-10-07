@@ -73,33 +73,41 @@ func (s *Mysql) UpdateAllPlayers(players []Players) error {
 	return r.Error
 }
 
-func (s *Mysql) SyncPlayer(newPlayer *Players, opts *UpdateOption) (bool, error) {
+func (s *Mysql) SyncPlayer(newPlayer *Players, opts *UpdateOption) error {
 	var player Players
 	findRes := s.client.Clauses(clause.Locking{Strength: "UPDATE"}).Model(&Players{}).First(&player, "uuid = ?", newPlayer.UUID)
 	if findRes.Error != nil {
 		logrus.WithError(findRes.Error).Errorf("[Player] SyncPlayer: Failed update player data (%s)", newPlayer.UUID)
-		return false, findRes.Error
+		return findRes.Error
 	}
 
-	quit := false
-	if opts != nil {
-		was := player.CurrentServer
-		if opts.IsQuit {
-			if was == newPlayer.CurrentServer {
-				newPlayer.CurrentServer = ""
-				quit = true
-			} else {
-				return false, nil
-			}
-		} else {
-			player.CurrentServer = newPlayer.CurrentServer
-		}
+	if opts.IsQuit {
+		newPlayer.CurrentServer = ""
+	} else {
+		player.CurrentServer = newPlayer.CurrentServer
 	}
+
+	/*
+		quit := false
+		if opts != nil {
+			was := player.CurrentServer
+			if opts.IsQuit {
+				if was == newPlayer.CurrentServer {
+					newPlayer.CurrentServer = ""
+					quit = true
+				} else {
+					return false, nil
+				}
+			} else {
+				player.CurrentServer = newPlayer.CurrentServer
+			}
+		}
+	*/
 
 	r := s.client.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "uuid"}},
 		UpdateAll: true,
 	}).Create(newPlayer)
 
-	return quit, r.Error
+	return r.Error
 }
