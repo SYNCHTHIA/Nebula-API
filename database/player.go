@@ -87,23 +87,6 @@ func (s *Mysql) SyncPlayer(newPlayer *Players, opts *UpdateOption) error {
 		player.CurrentServer = newPlayer.CurrentServer
 	}
 
-	/*
-		quit := false
-		if opts != nil {
-			was := player.CurrentServer
-			if opts.IsQuit {
-				if was == newPlayer.CurrentServer {
-					newPlayer.CurrentServer = ""
-					quit = true
-				} else {
-					return false, nil
-				}
-			} else {
-				player.CurrentServer = newPlayer.CurrentServer
-			}
-		}
-	*/
-
 	r := s.client.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "uuid"}},
 		UpdateAll: true,
